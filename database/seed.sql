@@ -1,0 +1,2 @@
+-- Dados de exemplo opcionais.
+-- Mantido vazio para evitar dados fictícios em produção.
