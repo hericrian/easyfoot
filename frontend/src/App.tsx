@@ -4,6 +4,7 @@ import { Home } from "./screens/Home";
 import { NewMatch } from "./screens/NewMatch";
 import { MatchScreen } from "./screens/MatchScreen";
 import { Ranking } from "./screens/Ranking";
+import { InstallApp } from "./components/InstallApp";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
@@ -70,6 +71,7 @@ function TopBar() {
       <a href="#/" aria-label="EasyFoot — início">
         <img src="/assets/easyfoot-logo.webp" alt="EasyFoot" height={28} width={77} />
       </a>
+      <InstallApp variant="compact" />
     </header>
   );
 }

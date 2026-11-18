@@ -147,6 +147,10 @@ button {
   padding-top: calc(10px + env(safe-area-inset-top));
   background: #000;
 }
+.topbar {
+  justify-content: space-between;
+  gap: 12px;
+}
 .topbar img {
   display: block;
   height: 28px;
@@ -342,6 +346,73 @@ button {
   bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));
   z-index: 5;
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+/* ---------- Instalação (PWA) ---------- */
+.inline-icon {
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.18em;
+  flex-shrink: 0;
+}
+.install-chip {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+.install-card {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  animation: pop-in 220ms var(--ease-out);
+}
+.install-head {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+.install-head img {
+  border-radius: 12px;
+  display: block;
+}
+.install-head > div {
+  display: grid;
+  gap: 2px;
+}
+.platforms {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.platforms li {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.platforms li.on {
+  background: var(--ink);
+  color: var(--ink-text);
+}
+.install-steps {
+  margin: 0;
+  padding-left: 1.3em;
+  display: grid;
+  gap: 6px;
+}
+.install-note {
+  font-size: 0.95rem;
 }
 
 /* ---------- Bottom nav ---------- */

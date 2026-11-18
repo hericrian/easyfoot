@@ -1,7 +1,9 @@
 // Service worker do EasyFoot: app shell offline.
 // Navegação: rede primeiro (sempre pega a versão nova), cache como fallback.
 // Assets do mesmo domínio: cache primeiro (arquivos do build têm hash no nome).
-const CACHE = "easyfoot-v1";
+const CACHE = "easyfoot-v2";
+// Saída do Vite: /assets/nome-HASH.js|css — conteúdo imutável, pode vir do cache.
+const HASHED = /^\/assets\/.+-[A-Za-z0-9_-]{8}\.(?:js|css)$/;
 const SHELL = ["/", "/manifest.webmanifest", "/assets/easyfoot-logo.webp", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
@@ -36,6 +38,21 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() => caches.match("/").then((r) => r || Response.error())),
     );
+    return;
+  }
+
+  const put = (res) => {
+    if (res.ok && res.type === "basic") {
+      const copy = res.clone();
+      caches.open(CACHE).then((c) => c.put(req, copy));
+    }
+    return res;
+  };
+
+  // Arquivos sem hash no nome (manifest, ícones, logo): rede primeiro, para que
+  // ícone/nome novos cheguem; cache só quando estiver offline.
+  if (!HASHED.test(url.pathname)) {
+    event.respondWith(fetch(req).then(put).catch(() => caches.match(req).then((r) => r || Response.error())));
     return;
   }
 

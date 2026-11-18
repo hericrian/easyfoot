@@ -1,6 +1,7 @@
 import { go, useStore } from "../app/store";
 import { formatDate, plural } from "../lib/util";
 import { gameScore } from "../lib/ranking";
+import { InstallApp } from "../components/InstallApp";
 
 export function Home() {
   const { db } = useStore();
@@ -20,6 +21,8 @@ export function Home() {
           </a>
         </div>
       </section>
+
+      <InstallApp />
 
       {matches.length === 0 ? (
         <section className="features">

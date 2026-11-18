@@ -8,5 +8,12 @@
 /sw.js
   Cache-Control: no-cache
 
-/assets/index-*
+/assets/*.js
   Cache-Control: public, max-age=31536000, immutable
+
+/assets/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: no-cache

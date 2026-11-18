@@ -22,7 +22,7 @@ O EasyFoot transforma a lista da pelada que fica perdida no WhatsApp em uma part
 | **Jogos** | Placar por gols de cada jogador + gols contra. Sugere o próximo confronto no esquema "ganhou fica". Classificação da noite por time. |
 | **Ranking** | Jogos, vitórias, empates, derrotas, gols e aproveitamento (V=3, E=1). |
 | **Compartilhar** | Times e resultados formatados para o WhatsApp (compartilhamento nativo, copiar ou link `wa.me`). |
-| **PWA** | Instalável no celular e funciona offline depois do primeiro acesso. |
+| **PWA** | Instalável em **Android** e **Windows/Mac** (botão "Instalar" no Chrome/Edge) e em **iPhone/iPad** (Safari → Compartilhar → Adicionar à Tela de Início, com instruções na tela). Atalhos para Nova partida e Ranking no ícone. Funciona offline depois do primeiro acesso. |
 | **Backup** | Exportar/importar JSON para guardar ou trocar de aparelho. |
 
 ## Arquitetura
