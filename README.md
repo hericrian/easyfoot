@@ -19,8 +19,9 @@ O EasyFoot transforma a lista da pelada que fica perdida no WhatsApp em uma part
 | **Sorteio** | Um goleiro por time, linha distribuída com diferença máxima de 1 jogador. Opcional: equilibrar pelo aproveitamento do ranking. |
 | **Draft** | Capitães escolhidos à mão ou sorteados, par ou ímpar (ou sorteio para 3+ times), ordem alternada ou serpentina, goleiros separados opcionalmente, desfazer escolha. |
 | **Ajustes** | Trocar jogador de time, renomear times e escolher cor do colete. |
-| **Jogos** | Placar por gols de cada jogador + gols contra. Sugere o próximo confronto no esquema "ganhou fica". Classificação da noite por time. |
-| **Ranking** | Jogos, vitórias, empates, derrotas, gols e aproveitamento (V=3, E=1). |
+| **Ao vivo** | Cronômetro com duração configurável (ou livre) e limite de gols opcional, placar grande, gol com autor e assistência, desfazer, apito e vibração no fim do tempo, tela sempre acesa. O tempo vem do relógio do aparelho e não atrasa com a tela bloqueada. |
+| **Jogos** | Placar ao vivo ou lançado depois. Sugere o próximo confronto no esquema "ganhou fica". Classificação da noite por time. |
+| **Ranking** | Jogos, vitórias, empates, derrotas, gols, assistências e aproveitamento (V=3, E=1). |
 | **Compartilhar** | Times e resultados formatados para o WhatsApp (compartilhamento nativo, copiar ou link `wa.me`). |
 | **PWA** | Instalável em **Android** e **Windows/Mac** (botão "Instalar" no Chrome/Edge) e em **iPhone/iPad** (Safari → Compartilhar → Adicionar à Tela de Início, com instruções na tela). Atalhos para Nova partida e Ranking no ícone. Funciona offline depois do primeiro acesso. |
 | **Backup** | Exportar/importar JSON para guardar ou trocar de aparelho. |
