@@ -19,7 +19,7 @@ O EasyFoot transforma a lista da pelada que fica perdida no WhatsApp em uma part
 | **Sorteio** | Um goleiro por time, linha distribuída com diferença máxima de 1 jogador. Opcional: equilibrar pelo aproveitamento do ranking. |
 | **Draft** | Capitães escolhidos à mão ou sorteados, par ou ímpar (ou sorteio para 3+ times), ordem alternada ou serpentina, goleiros separados opcionalmente, desfazer escolha. |
 | **Ajustes** | Trocar jogador de time, renomear times e escolher cor do colete. |
-| **Ao vivo** | Cronômetro com duração configurável (ou livre) e limite de gols opcional, placar grande, gol com autor e assistência, desfazer, apito e vibração no fim do tempo, tela sempre acesa. O tempo vem do relógio do aparelho e não atrasa com a tela bloqueada. |
+| **Ao vivo** | Cronômetro de 10, 15, 20, 30 min ou 1 hora (padrão: o horário inteiro da quadra) e limite de gols opcional, placar grande, gol com autor e assistência, desfazer, apito e vibração no fim do tempo, tela sempre acesa. O tempo vem do relógio do aparelho e não atrasa com a tela bloqueada. |
 | **Jogos** | Placar ao vivo ou lançado depois. Sugere o próximo confronto no esquema "ganhou fica". Classificação da noite por time. |
 | **Ranking** | Jogos, vitórias, empates, derrotas, gols, assistências e aproveitamento (V=3, E=1). Ranking geral e um ranking para cada horário fixo (dia da semana + início + fim, ex.: "Terça · 20h às 21h"). |
 | **Avaliações** | Notas de 1 a 5 estrelas com comentário, públicas para todos (estilo Google Maps): média, distribuição e lista. Antispam por origem, campo-isca, sem links e limite por IP. |

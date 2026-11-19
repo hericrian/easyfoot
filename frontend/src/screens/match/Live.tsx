@@ -8,16 +8,18 @@ import { uid } from "../../lib/util";
 import { Empty, Sheet } from "../../components/ui";
 import { IconFlag, IconPause, IconPlay, IconPlus, IconUndo, IconWhistle } from "../../components/icons";
 
-const DURATIONS = [5, 7, 8, 10, 12, 15, 20, 0];
+/** Minutos. 60 = o horário inteiro da quadra, que é o padrão. */
+const DURATIONS = [10, 15, 20, 30, 60];
+const DEFAULT_DURATION = 60;
 const LIMITS = [0, 1, 2, 3];
 const PREF = "easyfoot:live-prefs";
 
-function loadPrefs(): { dur: number; limit: number } {
+function loadPrefs(): { limit: number } {
   try {
     const p = JSON.parse(localStorage.getItem(PREF) || "{}");
-    return { dur: Number.isFinite(p.dur) ? p.dur : 10, limit: Number.isFinite(p.limit) ? p.limit : 0 };
+    return { limit: Number.isFinite(p.limit) ? p.limit : 0 };
   } catch {
-    return { dur: 10, limit: 0 };
+    return { limit: 0 };
   }
 }
 
@@ -83,7 +85,7 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
   const [aId, setA] = useState(pa.id);
   const [bId, setB] = useState(pb.id);
   const prefs = loadPrefs();
-  const [dur, setDur] = useState(prefs.dur);
+  const [dur, setDur] = useState(DEFAULT_DURATION);
   const [limit, setLimit] = useState(prefs.limit);
   const a = match.teams.find((t) => t.id === aId) ?? pa;
   const b = match.teams.find((t) => t.id === bId) ?? pb;
@@ -91,7 +93,7 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
 
   const begin = () => {
     try {
-      localStorage.setItem(PREF, JSON.stringify({ dur, limit }));
+      localStorage.setItem(PREF, JSON.stringify({ limit }));
     } catch {
       /* ignore */
     }
@@ -125,7 +127,7 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
         <div className="chips" role="radiogroup" aria-label="Tempo de jogo">
           {DURATIONS.map((d) => (
             <button key={d} type="button" role="radio" aria-checked={dur === d} className="chip-btn" onClick={() => setDur(d)}>
-              {d ? `${d} min` : "Livre"}
+              {d === 60 ? "1 hora" : `${d} min`}
             </button>
           ))}
         </div>
