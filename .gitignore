@@ -21,3 +21,6 @@ coverage/
 
 # Wrangler (estado local do D1/dev)
 frontend/.wrangler/
+
+# Segredos locais do wrangler
+frontend/.dev.vars

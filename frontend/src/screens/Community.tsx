@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useStore } from "../app/store";
+import { Avatar, GoogleButton, useAccount } from "../app/account";
 import { Sheet } from "../components/ui";
 import { ZoomViewer } from "../components/ZoomViewer";
 import { IconCopy, IconExpand } from "../components/icons";
@@ -73,12 +74,12 @@ function avatarHue(name: string): number {
 
 export function Community({ focus }: { focus?: string }) {
   const { toast } = useStore();
+  const { account, signIn } = useAccount();
   const [data, setData] = useState<ReviewPage | null>(null);
   const [error, setError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [writing, setWriting] = useState(false);
   const [rating, setRating] = useState(0);
-  const [name, setName] = useState("");
   const [comment, setComment] = useState("");
   const [honey, setHoney] = useState("");
   const [sending, setSending] = useState(false);
@@ -129,7 +130,7 @@ export function Community({ focus }: { focus?: string }) {
     }
     setSending(true);
     try {
-      await postReview({ name: name.trim(), rating, comment: comment.trim(), website: honey });
+      await postReview({ rating, comment: comment.trim(), website: honey });
       setWriting(false);
       setReviewed(true);
       try {
@@ -200,20 +201,38 @@ export function Community({ focus }: { focus?: string }) {
         )}
       </section>
 
-      <button type="button" className="btn primary lg block" onClick={() => setWriting(true)}>
-        {reviewed ? "Avaliar de novo" : "Avaliar o EasyFoot"}
-      </button>
+      {account ? (
+        <button type="button" className="btn primary lg block" onClick={() => setWriting(true)}>
+          {reviewed ? "Editar minha avaliação" : "Avaliar o EasyFoot"}
+        </button>
+      ) : (
+        <div className="signin-to-review">
+          <p className="footnote center">Para avaliar, entre com sua conta Google — assim cada avaliação é de uma pessoa real.</p>
+          <GoogleButton onClick={() => void signIn()} />
+        </div>
+      )}
 
       {data && data.reviews.length > 0 && (
         <ul className="reviews">
           {data.reviews.map((r: Review) => (
             <li key={r.id} className="review">
               <div className="review-head">
-                <span className="avatar" style={{ ["--h" as string]: avatarHue(r.name) }} aria-hidden>
-                  {initials(r.name)}
-                </span>
+                {r.photo ? (
+                  <img className="avatar photo" src={r.photo} alt="" width={38} height={38} referrerPolicy="no-referrer" loading="lazy" />
+                ) : (
+                  <span className="avatar" style={{ ["--h" as string]: avatarHue(r.name) }} aria-hidden>
+                    {initials(r.name)}
+                  </span>
+                )}
                 <div>
-                  <strong>{r.name}</strong>
+                  <strong>
+                    {r.name}
+                    {r.verified && (
+                      <span className="verified" title="Conta Google verificada">
+                        ✓ Conta Google
+                      </span>
+                    )}
+                  </strong>
                   <span className="review-meta">
                     <Stars value={r.rating} size={13} /> <span className="footnote">{timeAgo(r.createdAt)}</span>
                   </span>
@@ -259,10 +278,14 @@ export function Community({ focus }: { focus?: string }) {
       <Sheet open={writing} onClose={() => setWriting(false)} title="Avaliar o EasyFoot">
         <form onSubmit={submit} className="review-form">
           <StarInput value={rating} onChange={setRating} />
-          <label className="field">
-            <span>Seu nome (opcional)</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="Anônimo" autoComplete="nickname" />
-          </label>
+          {account && (
+            <div className="posting-as">
+              <Avatar account={account} size={32} />
+              <span>
+                Publicando como <strong>{account.name}</strong>
+              </span>
+            </div>
+          )}
           <label className="field">
             <span>Comentário (opcional)</span>
             <textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={600} rows={4} placeholder="O que achou? O que podemos melhorar?" />
@@ -271,7 +294,7 @@ export function Community({ focus }: { focus?: string }) {
             Não preencha
             <input tabIndex={-1} autoComplete="off" value={honey} onChange={(e) => setHoney(e.target.value)} name="website" />
           </label>
-          <p className="footnote">Sua avaliação fica pública para todos. Não coloque dados pessoais.</p>
+          <p className="footnote">Sua avaliação fica pública com seu nome e foto do Google. Avaliar de novo substitui a anterior.</p>
           <button type="submit" className="btn primary lg block" disabled={sending || !rating}>
             {sending ? "Enviando…" : "Publicar avaliação"}
           </button>

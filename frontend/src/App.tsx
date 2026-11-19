@@ -6,6 +6,7 @@ import { MatchScreen } from "./screens/MatchScreen";
 import { Ranking } from "./screens/Ranking";
 import { Community } from "./screens/Community";
 import { InstallApp } from "./components/InstallApp";
+import { AccountButton, AccountProvider } from "./app/account";
 import { IconHome, IconPlusCircle, IconStar, IconTrophy } from "./components/icons";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
@@ -77,7 +78,10 @@ function TopBar() {
       <a href="#/" aria-label="EasyFoot — início" className="topbar-logo">
         <img src="/assets/easyfoot-logo-inline.svg" alt="EasyFoot" height={22} width={156} />
       </a>
-      <InstallApp variant="compact" />
+      <div className="topbar-actions">
+        <InstallApp variant="compact" />
+        <AccountButton onDark />
+      </div>
     </header>
   );
 }
@@ -85,13 +89,15 @@ function TopBar() {
 export function App() {
   return (
     <StoreProvider>
-      <ErrorBoundary>
-        <TopBar />
-        <main className="app">
-          <Screen />
-        </main>
-        <Nav />
-      </ErrorBoundary>
+      <AccountProvider>
+        <ErrorBoundary>
+          <TopBar />
+          <main className="app">
+            <Screen />
+          </main>
+          <Nav />
+        </ErrorBoundary>
+      </AccountProvider>
     </StoreProvider>
   );
 }

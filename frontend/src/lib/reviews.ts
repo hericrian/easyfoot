@@ -1,4 +1,6 @@
-export type Review = { id: number; name: string; rating: number; comment: string; createdAt: number };
+import { idToken } from "./auth";
+
+export type Review = { id: number; name: string; rating: number; comment: string; createdAt: number; photo?: string | null; verified?: boolean };
 export type ReviewPage = {
   summary: { count: number; avg: number; counts: number[] };
   reviews: Review[];
@@ -11,10 +13,11 @@ export async function fetchReviews(before?: number): Promise<ReviewPage> {
   return res.json();
 }
 
-export async function postReview(input: { name: string; rating: number; comment: string; website: string }): Promise<void> {
+export async function postReview(input: { rating: number; comment: string; website: string }): Promise<void> {
+  const token = await idToken();
   const res = await fetch("/api/reviews", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify(input),
   });
   if (!res.ok) {

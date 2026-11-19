@@ -3,6 +3,7 @@ import { formatDate, plural } from "../lib/util";
 import { gameScore } from "../lib/ranking";
 import { liveScore } from "../lib/live";
 import { InstallApp } from "../components/InstallApp";
+import { AccountButton } from "../app/account";
 import { IconCamera, IconChevronRight, IconShuffle, IconStar, IconWhistle } from "../components/icons";
 
 export function Home() {
@@ -13,6 +14,9 @@ export function Home() {
   return (
     <>
       <section className="hero">
+        <div className="hero-account">
+          <AccountButton onDark />
+        </div>
         <img className="hero-logo" src="/assets/easyfoot-logo.svg" alt="EasyFoot" width={289} height={179} />
         <p className="hero-tag">Da lista do grupo ao apito final.</p>
         <div className="hero-actions">

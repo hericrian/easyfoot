@@ -9,6 +9,8 @@
  * Moderação: no painel D1, `UPDATE reviews SET hidden = 1 WHERE id = ?`.
  */
 
+import { userFromRequest } from "../../server/firebaseToken";
+
 interface D1Result<T> {
   results: T[];
 }
@@ -65,7 +67,7 @@ function originAllowed(req: Request): boolean {
   }
 }
 
-type Row = { id: number; name: string; rating: number; comment: string; created_at: number };
+type Row = { id: number; name: string; rating: number; comment: string; created_at: number; photo: string | null; uid: string | null };
 
 export async function onRequestGet({ request, env }: Ctx): Promise<Response> {
   const url = new URL(request.url);
@@ -74,7 +76,7 @@ export async function onRequestGet({ request, env }: Ctx): Promise<Response> {
   const [summary, dist, page] = await Promise.all([
     env.DB.prepare("SELECT COUNT(*) AS count, COALESCE(AVG(rating), 0) AS avg FROM reviews WHERE hidden = 0").first<{ count: number; avg: number }>(),
     env.DB.prepare("SELECT rating, COUNT(*) AS n FROM reviews WHERE hidden = 0 GROUP BY rating").all<{ rating: number; n: number }>(),
-    env.DB.prepare("SELECT id, name, rating, comment, created_at FROM reviews WHERE hidden = 0 AND id < ? ORDER BY id DESC LIMIT ?")
+    env.DB.prepare("SELECT id, name, rating, comment, created_at, photo, uid FROM reviews WHERE hidden = 0 AND id < ? ORDER BY id DESC LIMIT ?")
       .bind(before, PAGE + 1)
       .all<Row>(),
   ]);
@@ -86,7 +88,7 @@ export async function onRequestGet({ request, env }: Ctx): Promise<Response> {
   return json(
     {
       summary: { count: summary?.count ?? 0, avg: Math.round((summary?.avg ?? 0) * 10) / 10, counts },
-      reviews: rows.map((r) => ({ id: r.id, name: r.name, rating: r.rating, comment: r.comment, createdAt: r.created_at })),
+      reviews: rows.map((r) => ({ id: r.id, name: r.name, rating: r.rating, comment: r.comment, createdAt: r.created_at, photo: r.photo, verified: !!r.uid })),
       next: page.results.length > PAGE ? rows[rows.length - 1].id : null,
     },
     200,
@@ -110,9 +112,13 @@ export async function onRequestPost({ request, env }: Ctx): Promise<Response> {
   // Campo-isca invisível: humanos deixam vazio. Robô recebe "sucesso" e nada é salvo.
   if (clean(body.website, 200)) return json({ ok: true }, 201);
 
+  // Avaliação ligada à conta Google (como no Google Maps): nome e foto vêm da conta verificada
+  const user = await userFromRequest(request);
+  if (!user) return json({ error: "Entre com sua conta Google para avaliar." }, 401);
+
   const rating = Number(body.rating);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) return json({ error: "Escolha de 1 a 5 estrelas." }, 400);
-  const name = clean(body.name, 40).replace(/\n/g, " ") || "Anônimo";
+  const name = clean(user.name, 40).replace(/\n/g, " ") || "Jogador";
   const comment = clean(body.comment, 600);
   if (/(https?:\/\/|www\.|\.(com|net|org|xyz|io|ru)\b)/i.test(`${name} ${comment}`)) {
     return json({ error: "Links não são permitidos nas avaliações." }, 400);
@@ -122,10 +128,15 @@ export async function onRequestPost({ request, env }: Ctx): Promise<Response> {
   const ipHash = await sha256(`${env.REVIEWS_SALT || "easyfoot-reviews-v1"}:${ip}`);
   const now = Date.now();
   const recent = await env.DB.prepare("SELECT COUNT(*) AS n FROM reviews WHERE ip_hash = ? AND created_at > ?").bind(ipHash, now - DAY).first<{ n: number }>();
-  if ((recent?.n ?? 0) >= MAX_PER_DAY) return json({ error: "Você já avaliou hoje. Obrigado!" }, 429);
+  if ((recent?.n ?? 0) >= MAX_PER_DAY * 3) return json({ error: "Muitas avaliações deste aparelho hoje. Tente amanhã." }, 429);
 
-  await env.DB.prepare("INSERT INTO reviews (name, rating, comment, created_at, ip_hash) VALUES (?, ?, ?, ?, ?)")
-    .bind(name, rating, comment, now, ipHash)
+  // Uma avaliação por conta: avaliar de novo atualiza a anterior
+  await env.DB.prepare(
+    "INSERT INTO reviews (name, rating, comment, created_at, ip_hash, uid, photo) VALUES (?, ?, ?, ?, ?, ?, ?) " +
+      "ON CONFLICT(uid) WHERE uid IS NOT NULL DO UPDATE SET name = excluded.name, rating = excluded.rating, comment = excluded.comment, " +
+      "created_at = excluded.created_at, ip_hash = excluded.ip_hash, photo = excluded.photo",
+  )
+    .bind(name, rating, comment, now, ipHash, user.uid, user.picture)
     .run();
 
   return json({ ok: true }, 201);

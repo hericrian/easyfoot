@@ -14,6 +14,7 @@
     "brand": "node brand/wordmark.mjs && node brand/pix.mjs"
   },
   "dependencies": {
+    "firebase": "^11.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tesseract.js": "^5.1.1"
