@@ -1,10 +1,10 @@
 // Service worker do EasyFoot: app shell offline.
 // Navegação: rede primeiro (sempre pega a versão nova), cache como fallback.
 // Assets do mesmo domínio: cache primeiro (arquivos do build têm hash no nome).
-const CACHE = "easyfoot-v2";
+const CACHE = "easyfoot-v3";
 // Saída do Vite: /assets/nome-HASH.js|css — conteúdo imutável, pode vir do cache.
 const HASHED = /^\/assets\/.+-[A-Za-z0-9_-]{8}\.(?:js|css)$/;
-const SHELL = ["/", "/manifest.webmanifest", "/assets/easyfoot-logo.webp", "/icons/icon-192.png"];
+const SHELL = ["/", "/manifest.webmanifest", "/assets/easyfoot-logo.svg", "/assets/easyfoot-logo-inline.svg", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

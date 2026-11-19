@@ -2,23 +2,32 @@
 
 ## Logo
 
-Arquivo principal:
+Escrita **EASY FOOT** em **Saira Black Italic** (SIL Open Font License), convertida em curvas. As duas bolas substituem os "O" de FOOT. Não há arcos nem traços de velocidade: só a escrita.
 
-- Original: `frontend/brand/futeasy-logo.png`
-- Otimizada (usada no app): `frontend/public/assets/easyfoot-logo.webp`
-- Ícones do PWA: `frontend/public/icons/`
+As bolas são geradas a partir da geometria real de uma bola de futebol (icosaedro truncado projetado numa esfera), com gomos e costuras curvos e contorno grosso. Assim ficam nítidas de 16 px a qualquer tamanho.
 
-A marca usa o nome **EASY FUT**, com duas bolas de futebol substituindo os dois “O” de **FOOT**, em estética esportiva, angular, monocromática e de alto contraste.
+| Arquivo | Uso |
+| --- | --- |
+| `frontend/public/assets/easyfoot-logo.svg` | Logo empilhada (tela inicial) |
+| `frontend/public/assets/easyfoot-logo-inline.svg` | Logo em linha (barra superior) |
+| `frontend/brand/easyfoot-logo-ink.svg` | Versão escura para fundos claros |
+| `frontend/public/icons/*.png` | Ícones do PWA (a bola), maskable e imagem de compartilhamento |
+| `frontend/brand/futeasy-logo.png` | Logo original de referência |
 
-## Direção visual
+Para regenerar tudo:
 
-- Preto e branco
-- Tipografia esportiva/angulada
-- Visual moderno e forte
-- Elementos de movimento
-- Bolas de futebol integradas à palavra FOOT
-- Evitar excesso de efeitos e cores
+```bash
+cd frontend
+npm run brand
+```
 
-## Uso
+## Interface
 
-A logo deve ser usada como elemento principal da página inicial e pode ser reutilizada no favicon, tela de carregamento, compartilhamento e futuras versões mobile.
+Inspirada nas diretrizes de design da Apple:
+
+- Fonte do sistema (SF no iPhone/Mac, Segoe no Windows), com tracking que muda conforme o tamanho.
+- Cores semânticas em camadas: fundo agrupado, superfícies elevadas e rótulos primário, secundário e terciário, com modo claro e escuro.
+- Barras superior e inferior translúcidas (material com desfoque), sheets com mola criticamente amortecida e retorno imediato no toque.
+- Ícones de traço próprios no lugar de emojis.
+- Respeita "reduzir movimento", "reduzir transparência" e "aumentar contraste" do sistema.
+- Paleta monocromática da marca. A cor aparece só onde informa algo: vermelho no "ao vivo", verde no play e nos interruptores, amarelo no fim de tempo e as cores dos coletes dos times.
