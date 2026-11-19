@@ -4,7 +4,8 @@ import { Empty, Sheet } from "../components/ui";
 import { IconList, IconPencil, IconShirt, IconTrophy, IconWhistle } from "../components/icons";
 import { formatDate } from "../lib/util";
 import { hourLabel } from "../lib/slots";
-import { scheduleMatchReminders } from "../lib/push";
+import { scheduleMatchReminders, schedulePush } from "../lib/push";
+import { deleteSharedGame } from "../lib/cloud";
 import { MatchInfoFields } from "./NewMatch";
 import { ListTab } from "./match/ListTab";
 import { TeamsTab } from "./match/TeamsTab";
@@ -53,6 +54,8 @@ export function MatchScreen({ id, tab }: { id: string; tab?: string }) {
   const remove = () => {
     if (!window.confirm(`Apagar "${match.title}"? Os jogos dela saem do ranking.`)) return;
     setDb((d) => ({ ...d, matches: d.matches.filter((m) => m.id !== id) }));
+    match.games.forEach((g) => void deleteSharedGame(g.id));
+    void schedulePush(`match:${id}`, []);
     toast("Partida apagada.");
     go("/");
   };

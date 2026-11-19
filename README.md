@@ -21,8 +21,10 @@ O EasyFoot transforma a lista da pelada que fica perdida no WhatsApp em uma part
 | **Ajustes** | Trocar jogador de time, renomear times e escolher cor do colete. |
 | **Ao vivo** | Cronômetro de 10, 15, 20, 30 min, 1 hora (padrão: o horário inteiro da quadra) ou tempo personalizado e limite de gols opcional, placar grande, gol com autor e assistência, desfazer, apito e vibração no fim do tempo, tela sempre acesa. O tempo vem do relógio do aparelho e não atrasa com a tela bloqueada. |
 | **Jogos** | Placar ao vivo ou lançado depois. Sugere o próximo confronto no esquema "ganhou fica". Classificação da noite por time. |
-| **Ranking** | Jogos, vitórias, empates, derrotas, gols, assistências e aproveitamento (V=3, E=1). Ranking geral e um ranking para cada horário fixo (dia da semana + início + fim, ex.: "Terça · 20h às 21h"). |
-| **Avaliações** | Notas de 1 a 5 estrelas com comentário, públicas para todos (estilo Google Maps): média, distribuição e lista. Antispam por origem, campo-isca, sem links e limite por IP. |
+| **Ranking** | Jogos, vitórias, empates, derrotas, gols, assistências e aproveitamento (V=3, E=1). **Online e compartilhado** (Cloudflare D1): todos veem o ranking geral e o de cada horário fixo + local (ex.: "Terça · 20h às 21h · Arena X"), em qualquer aparelho. Jogos de quem está logado são publicados automaticamente. |
+| **Conta Google** | Login com Google (Firebase Auth, projeto `easyfoot-app`), servido pelo próprio domínio. Necessário para publicar jogos no ranking e para avaliar. |
+| **Notificações** | Web Push com o app fechado: hora de substituir, fim do tempo e lembrete da pelada (1 h e 15 min antes). Permissão pedida logo após o login. iPhone: só com o app instalado na tela inicial. |
+| **Avaliações** | Notas de 1 a 5 estrelas com comentário, públicas (estilo Google Maps): média, distribuição e lista, com nome e foto da conta Google. Uma avaliação por pessoa, editável. |
 | **Pix** | QR code para pagar o horário ou apoiar o desenvolvimento, com tela cheia e zoom, download e Pix copia e cola. |
 | **Compartilhar** | Times e resultados formatados para o WhatsApp (compartilhamento nativo, copiar ou link `wa.me`). |
 | **PWA** | Instalável em **Android** e **Windows/Mac** (botão "Instalar" no Chrome/Edge) e em **iPhone/iPad** (Safari → Compartilhar → Adicionar à Tela de Início, com instruções na tela). Atalhos para Nova partida e Ranking no ícone. Funciona offline depois do primeiro acesso. |
@@ -40,7 +42,7 @@ Cloudflare Pages (estático, CDN global)
     └── persistência local     src/lib/store.ts    (localStorage + backup JSON)
 ```
 
-**Dados:** as partidas ficam no aparelho (localStorage). Só as **avaliações** são compartilhadas: ficam no **Cloudflare D1** e são servidas por uma Pages Function (`frontend/functions/api/reviews.ts`).
+**Dados:** as partidas ficam no aparelho (localStorage). No **Cloudflare D1** ficam o ranking compartilhado (`/api/games`), as avaliações (`/api/reviews`) e as inscrições/agendamentos de notificação (`/api/push/*`). O Worker `easyfoot-push` (`frontend/worker/`) roda a cada minuto e envia os avisos vencidos.
 
 **Por que as partidas não usam backend:** todo o MVP roda no aparelho do usuário. Isso dá custo zero, funcionamento offline, nenhuma credencial para proteger e nenhum dado pessoal trafegando. Cloudflare Pages não executa FastAPI, e o OCR em Python exigiria um servidor com CPU dedicada. No navegador, ele roda de graça no próprio celular.
 

@@ -4,6 +4,7 @@ import { Sheet } from "../components/ui";
 import { IconBell, IconCheck } from "../components/icons";
 import { friendlyAuthError, hadSession, signInWithGoogle, signOutAccount, watchAccount, type Account } from "../lib/auth";
 import { enablePush, pushState, type PushState } from "../lib/push";
+import { syncGames } from "../lib/cloud";
 
 type Ctx = {
   account: Account | null;
@@ -19,7 +20,7 @@ const AccountCtx = createContext<Ctx | null>(null);
 const ASKED = "easyfoot:notify-asked";
 
 export function AccountProvider({ children }: { children: ReactNode }) {
-  const { toast } = useStore();
+  const { toast, db } = useStore();
   const [account, setAccount] = useState<Account | null>(null);
   const [ready, setReady] = useState(!hadSession());
   const [sheet, setSheet] = useState(false);
@@ -65,6 +66,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       setBusy(false);
     }
   }, [toast, maybeAskNotifications]);
+
+  // Ranking online: publica jogos novos/alterados de quem está logado (com pequena espera)
+  useEffect(() => {
+    if (!account) return;
+    const t = setTimeout(() => void syncGames(db.matches), 1500);
+    return () => clearTimeout(t);
+  }, [account, db.matches]);
 
   // Volta de um login por redirecionamento: pergunta das notificações na primeira vez
   useEffect(() => {

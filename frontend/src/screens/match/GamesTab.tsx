@@ -7,6 +7,7 @@ import { clock, liveScore } from "../../lib/live";
 import { gameText, shareText, whatsappUrl } from "../../lib/share";
 import { uid } from "../../lib/util";
 import { slotOf } from "../../lib/slots";
+import { deleteSharedGame, groupOf } from "../../lib/cloud";
 import { Empty, Sheet, Stepper, Swatch } from "../../components/ui";
 import { IconChevronRight, IconPencil, IconShare, IconShirt, IconTimer, IconWhistle } from "../../components/icons";
 
@@ -49,6 +50,7 @@ export function GamesTab({ match }: { match: Match }) {
   const remove = () => {
     if (!editing || !window.confirm("Apagar este jogo? Ele sai do ranking.")) return;
     updateMatch(match.id, (m) => ({ ...m, games: m.games.filter((g) => g.id !== editing.id) }));
+    void deleteSharedGame(editing.id);
     setEditing(null);
     toast("Jogo apagado.");
   };
@@ -228,7 +230,7 @@ export function GamesTab({ match }: { match: Match }) {
       )}
 
       {match.games.length > 0 && (
-        <a className="btn ghost block" href={slotOf(match) ? `#/ranking/${slotOf(match)!.key}` : "#/ranking"}>
+        <a className="btn ghost block" href={groupOf(match) ? `#/ranking/${encodeURIComponent(groupOf(match)!.key)}` : "#/ranking"}>
           {slotOf(match) ? `Ranking de ${slotOf(match)!.short}` : "Ver ranking geral"} <IconChevronRight size={18} />
         </a>
       )}
