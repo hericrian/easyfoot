@@ -61,6 +61,9 @@ export function whistle(kind: "short" | "end" = "short"): void {
 
 export function vibrate(pattern: number | number[]): void {
   try {
+    // O Chrome só permite vibrar depois de um toque real na página.
+    const ua = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+    if (ua && !ua.hasBeenActive) return;
     navigator.vibrate?.(pattern);
   } catch {
     /* sem suporte */
