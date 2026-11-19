@@ -3,6 +3,7 @@ import { go, useStore } from "../../app/store";
 import type { Entry, Match } from "../../types";
 import { parseList } from "../../lib/parser";
 import { nameKey, plural, uid } from "../../lib/util";
+import { IconBench, IconCamera, IconGlove, IconPlus, IconShirt, IconX } from "../../components/icons";
 
 const PLACEHOLDER = `Cole aqui a lista do grupo, por exemplo:
 
@@ -106,7 +107,7 @@ export function ListTab({ match }: { match: Match }) {
         title="Goleiro"
         onClick={() => patch(e.id, { gk: !e.gk })}
       >
-        🧤
+        <IconGlove size={19} />
       </button>
       <input
         aria-label="Nome do jogador"
@@ -126,10 +127,10 @@ export function ListTab({ match }: { match: Match }) {
         title={e.reserve ? "Mover para confirmados" : "Mover para reservas"}
         onClick={() => patch(e.id, { reserve: !e.reserve })}
       >
-        {e.reserve ? "↑" : "R"}
+        <IconBench size={18} />
       </button>
       <button type="button" className="toggle del" aria-label={`Remover ${e.name}`} onClick={() => remove(e.id)}>
-        ✕
+        <IconX size={16} />
       </button>
     </li>
   );
@@ -156,7 +157,7 @@ export function ListTab({ match }: { match: Match }) {
             Ler lista
           </button>
           <button type="button" className="btn" disabled={!!ocr} onClick={() => fileRef.current?.click()}>
-            📷 Enviar print
+            <IconCamera size={18} /> Enviar print
           </button>
           {match.entries.length > 0 && text.trim() && (
             <button
@@ -171,7 +172,7 @@ export function ListTab({ match }: { match: Match }) {
           )}
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={onFiles} />
         </div>
-        <p className="hint">O print é lido no seu aparelho. Goleiros: 🧤, 🥅, “goleiro”, “gol” ou seção “Goleiros:”.</p>
+        <p className="hint">O print é lido no próprio aparelho. Goleiros são reconhecidos por 🧤, 🥅, “goleiro”, “gol” ou pela seção “Goleiros:”.</p>
       </div>
 
       <div className="card">
@@ -189,11 +190,11 @@ export function ListTab({ match }: { match: Match }) {
 
         <form className="add-row" onSubmit={addOne}>
           <button type="button" className="toggle gk" aria-pressed={newGk} aria-label="Novo jogador é goleiro" onClick={() => setNewGk((v) => !v)}>
-            🧤
+            <IconGlove size={19} />
           </button>
           <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Adicionar jogador" maxLength={40} aria-label="Nome do novo jogador" />
-          <button type="submit" className="btn primary sm" disabled={!newName.trim()}>
-            Adicionar
+          <button type="submit" className="btn primary sm" disabled={!newName.trim()} aria-label="Adicionar jogador">
+            <IconPlus size={18} />
           </button>
         </form>
 
@@ -209,7 +210,8 @@ export function ListTab({ match }: { match: Match }) {
       </div>
 
       <button type="button" className="btn primary lg block sticky-cta" disabled={active.length < 2} onClick={() => go(`/partida/${match.id}/times`)}>
-        {active.length < 2 ? "Adicione pelo menos 2 jogadores" : `Montar os times com ${active.length} →`}
+        <IconShirt size={20} />
+        {active.length < 2 ? "Adicione pelo menos 2 jogadores" : `Montar times com ${active.length}`}
       </button>
     </div>
   );

@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import type { Entry, Team } from "../../types";
 import { draftOrder, emptyTeams } from "../../lib/draw";
 import { shuffle } from "../../lib/util";
-import { Swatch } from "../../components/ui";
+import { GkBadge, Swatch } from "../../components/ui";
+import { IconShuffle, IconUndo } from "../../components/icons";
 
 type Phase = "captains" | "coin" | "picking";
 
@@ -93,7 +94,7 @@ export function Draft({
                 <li key={e.id}>
                   <button type="button" className={`player${idx >= 0 ? " selected" : ""}`} aria-pressed={idx >= 0} onClick={() => toggleCaptain(e.id)}>
                     {idx >= 0 && <span className="cap-badge">C{idx + 1}</span>}
-                    {e.gk && <span aria-label="goleiro">🧤</span>}
+                    {e.gk && <GkBadge />}
                     {e.name}
                   </button>
                 </li>
@@ -116,7 +117,7 @@ export function Draft({
           </label>
           <div className="row">
             <button type="button" className="btn" onClick={randomCaptains}>
-              🎲 Sortear capitães
+              <IconShuffle size={18} /> Sortear capitães
             </button>
             <button type="button" className="btn primary" disabled={captains.length !== teamCount} onClick={startCoin}>
               Continuar
@@ -202,7 +203,7 @@ export function Draft({
           {remaining.map((e) => (
             <li key={e.id}>
               <button type="button" className="player pickable" onClick={() => pick(e.id)}>
-                {e.gk && <span aria-label="goleiro">🧤</span>}
+                {e.gk && <GkBadge />}
                 {e.name}
               </button>
             </li>
@@ -210,7 +211,7 @@ export function Draft({
         </ul>
         <div className="row">
           <button type="button" className="btn sm" disabled={!picks.length} onClick={() => setPicks((p) => p.slice(0, -1))}>
-            ↶ Desfazer
+            <IconUndo size={17} /> Desfazer
           </button>
           <button type="button" className="btn sm ghost" onClick={onCancel}>
             Cancelar draft
@@ -234,7 +235,7 @@ export function Draft({
                   <li key={id}>
                     <span className="player static">
                       {id === captains[i] && <span className="cap-badge">C</span>}
-                      {e.gk && <span aria-label="goleiro">🧤</span>}
+                      {e.gk && <GkBadge />}
                       {e.name}
                     </span>
                   </li>

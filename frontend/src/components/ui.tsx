@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { IconX } from "./icons";
 
 export function Stepper({
   value,
@@ -49,10 +50,11 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
     >
       {open && (
         <div className="sheet-body">
+          <div className="sheet-grabber" aria-hidden />
           <div className="sheet-head">
             <h2>{title}</h2>
             <button type="button" className="icon-btn" aria-label="Fechar" onClick={onClose}>
-              ✕
+              <IconX size={18} />
             </button>
           </div>
           {children}
@@ -62,10 +64,12 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   );
 }
 
-export function Empty({ icon, title, children }: { icon: string; title: string; children?: ReactNode }) {
+export function Empty({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return (
     <div className="empty">
-      <span aria-hidden>{icon}</span>
+      <span className="empty-icon" aria-hidden>
+        {icon}
+      </span>
       <h3>{title}</h3>
       {children}
     </div>
@@ -74,4 +78,13 @@ export function Empty({ icon, title, children }: { icon: string; title: string; 
 
 export function Swatch({ color }: { color: string }) {
   return <span className="swatch" style={{ background: color }} aria-hidden />;
+}
+
+/** Selo de goleiro — texto curto em vez de emoji, lê igual em qualquer sistema. */
+export function GkBadge() {
+  return (
+    <span className="gk-badge" title="Goleiro">
+      GOL
+    </span>
+  );
 }

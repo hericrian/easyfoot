@@ -1,10 +1,11 @@
 import { Component, type ReactNode } from "react";
-import { StoreProvider, useRoute } from "./app/store";
+import { StoreProvider, useRoute, useStore } from "./app/store";
 import { Home } from "./screens/Home";
 import { NewMatch } from "./screens/NewMatch";
 import { MatchScreen } from "./screens/MatchScreen";
 import { Ranking } from "./screens/Ranking";
 import { InstallApp } from "./components/InstallApp";
+import { IconHome, IconPlusCircle, IconTrophy } from "./components/icons";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
@@ -19,7 +20,6 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: boolean 
       return (
         <section className="panel">
           <div className="empty">
-            <span aria-hidden>⚠️</span>
             <h3>Algo deu errado</h3>
             <p className="muted">Seus dados continuam salvos. Recarregue a página para continuar.</p>
             <button type="button" className="btn primary" onClick={() => window.location.reload()}>
@@ -43,18 +43,21 @@ function Screen() {
 
 function Nav() {
   const [page] = useRoute();
+  const { db } = useStore();
+  const live = db.matches.some((m) => m.live);
   const cur = page || "inicio";
-  const items: [string, string, string, string][] = [
-    ["inicio", "#/", "Início", "⌂"],
-    ["nova", "#/nova", "Nova", "+"],
-    ["ranking", "#/ranking", "Ranking", "★"],
+  const items: [string, string, string, ReactNode][] = [
+    ["inicio", "#/", "Partidas", <IconHome key="h" />],
+    ["nova", "#/nova", "Nova", <IconPlusCircle key="n" />],
+    ["ranking", "#/ranking", "Ranking", <IconTrophy key="r" />],
   ];
   return (
-    <nav className="bottom-nav" aria-label="Principal">
+    <nav className="tabbar" aria-label="Principal">
       {items.map(([k, href, label, icon]) => (
         <a key={k} href={href} aria-current={cur === k || (k === "inicio" && cur === "partida") ? "page" : undefined}>
-          <span aria-hidden className="nav-icon">
+          <span className="tab-icon">
             {icon}
+            {k === "inicio" && live && <span className="live-dot" aria-label="jogo ao vivo" />}
           </span>
           {label}
         </a>
@@ -68,8 +71,8 @@ function TopBar() {
   if (!page) return null;
   return (
     <header className="topbar">
-      <a href="#/" aria-label="EasyFoot — início">
-        <img src="/assets/easyfoot-logo.webp" alt="EasyFoot" height={28} width={77} />
+      <a href="#/" aria-label="EasyFoot — início" className="topbar-logo">
+        <img src="/assets/easyfoot-logo-inline.svg" alt="EasyFoot" height={22} width={156} />
       </a>
       <InstallApp variant="compact" />
     </header>

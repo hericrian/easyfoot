@@ -5,7 +5,8 @@ import { TEAM_COLORS, drawTeams, suggestedTeamCount } from "../../lib/draw";
 import { strengthByKey } from "../../lib/ranking";
 import { shareText, teamsText, whatsappUrl } from "../../lib/share";
 import { nameKey } from "../../lib/util";
-import { Empty, Stepper, Swatch } from "../../components/ui";
+import { Empty, GkBadge, Stepper, Swatch } from "../../components/ui";
+import { IconList, IconShare, IconShuffle, IconWhistle } from "../../components/icons";
 import { Draft } from "./Draft";
 
 type Mode = "setup" | "draft" | "view";
@@ -25,7 +26,7 @@ export function TeamsTab({ match }: { match: Match }) {
 
   if (active.length < 2) {
     return (
-      <Empty icon="📋" title="Faltam jogadores">
+      <Empty icon={<IconList size={40} />} title="Faltam jogadores">
         <p className="muted">Monte a lista primeiro — pelo menos 2 confirmados.</p>
         <a className="btn primary" href={`#/partida/${match.id}/lista`}>
           Ir para a lista
@@ -75,12 +76,12 @@ export function TeamsTab({ match }: { match: Match }) {
           <h2>Como montar os times?</h2>
           <div className="option-grid">
             <button type="button" className="option" aria-pressed={method === "auto"} onClick={() => setMethod("auto")}>
-              <span aria-hidden>🎲</span>
+              <IconShuffle size={26} />
               <strong>Sorteio</strong>
               <small>Automático e equilibrado</small>
             </button>
             <button type="button" className="option" aria-pressed={method === "draft"} onClick={() => setMethod("draft")}>
-              <span aria-hidden>👆</span>
+              <IconWhistle size={26} />
               <strong>Draft</strong>
               <small>Capitães escolhem</small>
             </button>
@@ -149,7 +150,7 @@ export function TeamsTab({ match }: { match: Match }) {
   const playerChip = (e: Entry) => (
     <li key={e.id}>
       <button type="button" className={`player${moving === e.id ? " selected" : ""}`} aria-pressed={moving === e.id} onClick={() => setMoving(moving === e.id ? null : e.id)}>
-        {e.gk && <span aria-label="goleiro">🧤</span>}
+        {e.gk && <GkBadge />}
         {e.name}
       </button>
     </li>
@@ -226,7 +227,7 @@ export function TeamsTab({ match }: { match: Match }) {
 
       <div className="row wrap">
         <button type="button" className="btn primary" onClick={share}>
-          Compartilhar
+          <IconShare size={18} /> Compartilhar
         </button>
         <a className="btn whatsapp" href={whatsappUrl(teamsText(match))} target="_blank" rel="noopener noreferrer">
           Enviar no WhatsApp
@@ -241,15 +242,15 @@ export function TeamsTab({ match }: { match: Match }) {
             toast("Times sorteados de novo.");
           }}
         >
-          🎲 Sortear de novo
+          <IconShuffle size={18} /> Sortear de novo
         </button>
         <button type="button" className="btn ghost" onClick={() => setMode("setup")}>
           Mudar formato
         </button>
       </div>
 
-      <button type="button" className="btn primary lg block" onClick={() => go(`/partida/${match.id}/jogos`)}>
-        Registrar jogos →
+      <button type="button" className="btn primary lg block" onClick={() => go(`/partida/${match.id}/ao-vivo`)}>
+        <IconWhistle size={20} /> Ir para o jogo ao vivo
       </button>
     </div>
   );
