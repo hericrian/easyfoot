@@ -1,0 +1,57 @@
+name: Deploy
+
+# Todo push na main testa, gera o build e publica em https://easyfoot.pages.dev
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PUBLISH: ${{ github.event_name != 'pull_request' }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Testes
+        run: npm test
+
+      - name: Build (typecheck + Vite)
+        run: npm run build
+
+      - name: Aviso — segredos do Cloudflare ausentes
+        if: env.PUBLISH == 'true' && (env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == '')
+        run: echo "::warning::Defina CLOUDFLARE_API_TOKEN e CLOUDFLARE_ACCOUNT_ID em Settings → Secrets → Actions para publicar automaticamente."
+
+      - name: Migrações do banco de avaliações (D1)
+        if: env.PUBLISH == 'true' && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: npx wrangler d1 migrations apply easyfoot-reviews --remote
+
+      - name: Publicar no Cloudflare Pages
+        if: env.PUBLISH == 'true' && env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        run: npx wrangler pages deploy dist --project-name easyfoot --branch main --commit-hash "$GITHUB_SHA" --commit-message "${COMMIT_MSG%%$'\n'*}"
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message || 'manual' }}

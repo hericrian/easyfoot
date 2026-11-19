@@ -18,3 +18,6 @@ coverage/
 
 # Ferramentas locais
 .claude/
+
+# Wrangler (estado local do D1/dev)
+frontend/.wrangler/
