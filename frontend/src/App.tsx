@@ -4,8 +4,9 @@ import { Home } from "./screens/Home";
 import { NewMatch } from "./screens/NewMatch";
 import { MatchScreen } from "./screens/MatchScreen";
 import { Ranking } from "./screens/Ranking";
+import { Community } from "./screens/Community";
 import { InstallApp } from "./components/InstallApp";
-import { IconHome, IconPlusCircle, IconTrophy } from "./components/icons";
+import { IconHome, IconPlusCircle, IconStar, IconTrophy } from "./components/icons";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
@@ -36,7 +37,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: boolean 
 function Screen() {
   const [page, id, tab] = useRoute();
   if (page === "nova") return <NewMatch />;
-  if (page === "ranking") return <Ranking />;
+  if (page === "ranking") return <Ranking slot={id} />;
+  if (page === "avaliacoes") return <Community focus={id} />;
   if (page === "partida" && id) return <MatchScreen key={id} id={id} tab={tab} />;
   return <Home />;
 }
@@ -50,6 +52,7 @@ function Nav() {
     ["inicio", "#/", "Partidas", <IconHome key="h" />],
     ["nova", "#/nova", "Nova", <IconPlusCircle key="n" />],
     ["ranking", "#/ranking", "Ranking", <IconTrophy key="r" />],
+    ["avaliacoes", "#/avaliacoes", "Avaliações", <IconStar key="s" />],
   ];
   return (
     <nav className="tabbar" aria-label="Principal">

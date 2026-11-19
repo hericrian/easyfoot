@@ -1,0 +1,11 @@
+# Cloudflare Pages: projeto "easyfoot" (easyfoot.pages.dev)
+name = "easyfoot"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-01"
+
+# Avaliações públicas do app (Pages Functions em functions/api)
+[[d1_databases]]
+binding = "DB"
+database_name = "easyfoot-reviews"
+database_id = "4751d482-1fd1-42da-b5d0-1852c4bd588f"
+migrations_dir = "migrations"

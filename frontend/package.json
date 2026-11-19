@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "pages:dev": "npm run build && wrangler pages dev dist",
     "deploy": "npm run build && wrangler pages deploy dist --project-name easyfoot --branch main",
-    "brand": "node brand/wordmark.mjs"
+    "brand": "node brand/wordmark.mjs && node brand/pix.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -26,6 +26,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.3.4",
     "opentype.js": "^1.3.4",
+    "qrcode": "^1.5.4",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
     "vitest": "^3.2.7",

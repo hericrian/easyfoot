@@ -3,7 +3,7 @@ import { formatDate, plural } from "../lib/util";
 import { gameScore } from "../lib/ranking";
 import { liveScore } from "../lib/live";
 import { InstallApp } from "../components/InstallApp";
-import { IconCamera, IconChevronRight, IconShuffle, IconWhistle } from "../components/icons";
+import { IconCamera, IconChevronRight, IconShuffle, IconStar, IconWhistle } from "../components/icons";
 
 export function Home() {
   const { db } = useStore();
@@ -110,6 +110,34 @@ export function Home() {
           </ul>
         </section>
       )}
+
+      <section className="group">
+        <h2 className="group-title">EasyFoot</h2>
+        <ul className="list inset">
+          <li>
+            <a className="row-item tappable" href="#/avaliacoes">
+              <span className="step-icon">
+                <IconStar size={20} />
+              </span>
+              <span className="grow">
+                <strong>Avaliações</strong>
+                <small>Veja o que a galera achou e deixe a sua nota.</small>
+              </span>
+              <IconChevronRight size={18} className="chev" />
+            </a>
+          </li>
+          <li>
+            <a className="row-item tappable" href="#/avaliacoes/apoie">
+              <span className="step-icon pix">Pix</span>
+              <span className="grow">
+                <strong>Pague o horário ou apoie o app</strong>
+                <small>QR code e Pix copia e cola.</small>
+              </span>
+              <IconChevronRight size={18} className="chev" />
+            </a>
+          </li>
+        </ul>
+      </section>
     </>
   );
 }

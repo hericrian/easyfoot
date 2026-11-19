@@ -159,3 +159,19 @@ export const IconPencil = (p: P) => (
     <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z" />
   </Icon>
 );
+export const IconStar = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.6l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8z" />
+  </Icon>
+);
+export const IconCopy = (p: P) => (
+  <Icon {...p}>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="2" />
+    <path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" />
+  </Icon>
+);
+export const IconExpand = (p: P) => (
+  <Icon {...p}>
+    <path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5" />
+  </Icon>
+);
