@@ -1,64 +1,13 @@
 import { useState } from "react";
 import { go, useStore } from "../../app/store";
-import type { Game, GameSide, Match, Team } from "../../types";
+import type { Game, GameSide, Match } from "../../types";
 import { gameScore, sideScore } from "../../lib/ranking";
+import { nextPairing, sideFrom, standings } from "../../lib/games";
+import { clock, liveScore } from "../../lib/live";
 import { gameText, shareText, whatsappUrl } from "../../lib/share";
 import { uid } from "../../lib/util";
 import { Empty, Sheet, Stepper, Swatch } from "../../components/ui";
-
-function sideFrom(team: Team, match: Match, prev?: GameSide): GameSide {
-  const byId = new Map(match.entries.map((e) => [e.id, e]));
-  const goals = new Map(prev?.teamId === team.id ? prev.players.map((p) => [p.id, p.goals]) : []);
-  return {
-    teamId: team.id,
-    name: team.name,
-    color: team.color,
-    players: team.playerIds
-      .map((id) => byId.get(id))
-      .filter((e): e is NonNullable<typeof e> => !!e)
-      .map((e) => ({ id: e.id, name: e.name, goals: goals.get(e.id) ?? 0 })),
-    extra: prev?.teamId === team.id ? prev.extra : 0,
-  };
-}
-
-/** "Ganhou fica": vencedor do último jogo enfrenta o próximo time da fila. */
-function nextPairing(match: Match): [Team, Team] {
-  const t = match.teams;
-  const last = match.games[match.games.length - 1];
-  if (!last || t.length < 3) return [t[0], t[1]];
-  const [sa, sb] = gameScore(last);
-  const stayId = sa >= sb ? last.a.teamId : last.b.teamId;
-  const stay = t.find((x) => x.id === stayId) ?? t[0];
-  const played = new Set([last.a.teamId, last.b.teamId]);
-  const startIdx = Math.max(...[last.a.teamId, last.b.teamId].map((id) => t.findIndex((x) => x.id === id)));
-  for (let k = 1; k <= t.length; k++) {
-    const cand = t[(startIdx + k) % t.length];
-    if (!played.has(cand.id)) return [stay, cand];
-  }
-  return [stay, t.find((x) => x.id !== stay.id) ?? t[1]];
-}
-
-function standings(match: Match) {
-  const rows = new Map<string, { name: string; color: string; j: number; v: number; e: number; d: number; gp: number; gc: number }>();
-  for (const t of match.teams) rows.set(t.id, { name: t.name, color: t.color, j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0 });
-  for (const g of match.games) {
-    const [a, b] = gameScore(g);
-    for (const [side, mine, other] of [
-      [g.a, a, b],
-      [g.b, b, a],
-    ] as const) {
-      const r = rows.get(side.teamId) ?? { name: side.name, color: side.color, j: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0 };
-      r.j++;
-      r.gp += mine;
-      r.gc += other;
-      if (mine > other) r.v++;
-      else if (mine === other) r.e++;
-      else r.d++;
-      rows.set(side.teamId, r);
-    }
-  }
-  return [...rows.values()].filter((r) => r.j > 0).sort((x, y) => y.v * 3 + y.e - (x.v * 3 + x.e) || y.gp - y.gc - (x.gp - x.gc) || y.gp - x.gp);
-}
+import { IconChevronRight, IconPencil, IconShare, IconShirt, IconTimer, IconWhistle } from "../../components/icons";
 
 export function GamesTab({ match }: { match: Match }) {
   const { updateMatch, toast } = useStore();
@@ -67,8 +16,8 @@ export function GamesTab({ match }: { match: Match }) {
 
   if (match.teams.length < 2) {
     return (
-      <Empty icon="🎲" title="Monte os times primeiro">
-        <p className="muted">Depois do sorteio você registra placar e gols aqui.</p>
+      <Empty icon={<IconShirt size={40} />} title="Monte os times primeiro">
+        <p className="muted">Depois do sorteio, os jogos e a classificação aparecem aqui.</p>
         <a className="btn primary" href={`#/partida/${match.id}/times`}>
           Ir para os times
         </a>
@@ -76,7 +25,7 @@ export function GamesTab({ match }: { match: Match }) {
     );
   }
 
-  const startNew = () => {
+  const startManual = () => {
     const [a, b] = nextPairing(match);
     setEditing({ id: uid(), createdAt: Date.now(), a: sideFrom(a, match), b: sideFrom(b, match) });
   };
@@ -92,7 +41,7 @@ export function GamesTab({ match }: { match: Match }) {
       games: m.games.some((g) => g.id === editing.id) ? m.games.map((g) => (g.id === editing.id ? editing : g)) : [...m.games, editing],
     }));
     const [a, b] = gameScore(editing);
-    toast(`${editing.a.name} ${a} x ${b} ${editing.b.name} — salvo no ranking.`);
+    toast(`${editing.a.name} ${a} x ${b} ${editing.b.name} — salvo.`);
     setEditing(null);
   };
 
@@ -109,6 +58,7 @@ export function GamesTab({ match }: { match: Match }) {
 
   const table = standings(match);
   const games = [...match.games].reverse();
+  const live = match.live;
 
   const sideEditor = (key: "a" | "b") => {
     if (!editing) return null;
@@ -131,15 +81,15 @@ export function GamesTab({ match }: { match: Match }) {
             ))}
           </select>
         </label>
-        <ul className="goal-list">
+        <ul className="list inset">
           {side.players.map((p) => (
-            <li key={p.id}>
-              <span>{p.name}</span>
+            <li key={p.id} className="row-item">
+              <span className="grow">{p.name}</span>
               <Stepper size="sm" value={p.goals} min={0} max={30} label={`gols de ${p.name}`} onChange={(v) => setGoal(key, p.id, v)} />
             </li>
           ))}
-          <li className="extra">
-            <span>Gol contra / outros</span>
+          <li className="row-item">
+            <span className="grow muted">Gol contra / sem autor</span>
             <Stepper size="sm" value={side.extra} min={0} max={30} label="gols sem autor" onChange={(v) => setSide(key, { ...side, extra: v })} />
           </li>
         </ul>
@@ -149,13 +99,30 @@ export function GamesTab({ match }: { match: Match }) {
 
   return (
     <div className="stack">
-      <button type="button" className="btn primary lg block" onClick={startNew}>
-        + Registrar jogo
-      </button>
+      {live ? (
+        <a className="live-card" href={`#/partida/${match.id}/ao-vivo`}>
+          <span className="live-pill">
+            <span className="dot" aria-hidden /> {live.runningSince ? "Ao vivo" : "Pausado"}
+          </span>
+          <strong>
+            {live.a.name} {liveScore(live).join(" x ")} {live.b.name}
+          </strong>
+          <IconChevronRight size={18} />
+        </a>
+      ) : (
+        <div className="cta-pair">
+          <button type="button" className="btn primary lg" onClick={() => go(`/partida/${match.id}/ao-vivo`)}>
+            <IconWhistle /> Jogar ao vivo
+          </button>
+          <button type="button" className="btn lg" onClick={startManual}>
+            <IconPencil /> Lançar placar
+          </button>
+        </div>
+      )}
 
       {table.length > 0 && (
-        <div className="card">
-          <h2>Classificação da partida</h2>
+        <section className="group">
+          <h2 className="group-title">Classificação da partida</h2>
           <div className="table-wrap">
             <table className="rank compact">
               <thead>
@@ -170,7 +137,7 @@ export function GamesTab({ match }: { match: Match }) {
               </thead>
               <tbody>
                 {table.map((r) => (
-                  <tr key={r.name}>
+                  <tr key={r.teamId}>
                     <td className="left name">
                       <Swatch color={r.color} /> {r.name}
                     </td>
@@ -178,78 +145,99 @@ export function GamesTab({ match }: { match: Match }) {
                     <td className="strong">{r.v}</td>
                     <td>{r.e}</td>
                     <td>{r.d}</td>
-                    <td>{r.gp - r.gc}</td>
+                    <td>{r.gp - r.gc > 0 ? `+${r.gp - r.gc}` : r.gp - r.gc}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       )}
 
       {games.length === 0 ? (
-        <p className="muted center">Nenhum jogo registrado ainda.</p>
+        <p className="footnote center">Nenhum jogo ainda. Use "Jogar ao vivo" para cronômetro e placar, ou lance um resultado.</p>
       ) : (
-        <ul className="games">
-          {games.map((g, i) => {
-            const [a, b] = gameScore(g);
-            const scorers = [...g.a.players, ...g.b.players].filter((p) => p.goals > 0);
-            return (
-              <li key={g.id} className="game">
-                <div className="game-top">
-                  <span className="muted">Jogo {games.length - i}</span>
-                  <div className="row">
-                    <button
-                      type="button"
-                      className="btn sm ghost"
-                      onClick={async () => {
-                        const r = await shareText(gameText(match, g));
-                        if (r === "copied") toast("Resultado copiado.");
-                      }}
-                    >
-                      Compartilhar
-                    </button>
-                    <button type="button" className="btn sm" onClick={() => setEditing(JSON.parse(JSON.stringify(g)) as Game)}>
-                      Editar
-                    </button>
+        <section className="group">
+          <h2 className="group-title">Jogos</h2>
+          <ul className="games">
+            {games.map((g, i) => {
+              const [a, b] = gameScore(g);
+              const scorers = [...g.a.players, ...g.b.players].filter((p) => p.goals > 0 || (p.assists ?? 0) > 0);
+              return (
+                <li key={g.id} className="game">
+                  <div className="game-top">
+                    <span className="eyebrow">
+                      Jogo {games.length - i}
+                      {g.durationMs ? (
+                        <>
+                          {" "}
+                          · <IconTimer size={13} /> {clock(g.durationMs)}
+                        </>
+                      ) : null}
+                    </span>
+                    <div className="row">
+                      <button
+                        type="button"
+                        className="icon-btn sm"
+                        aria-label="Compartilhar resultado"
+                        onClick={async () => {
+                          const r = await shareText(gameText(match, g));
+                          if (r === "copied") toast("Resultado copiado.");
+                        }}
+                      >
+                        <IconShare size={17} />
+                      </button>
+                      <button type="button" className="icon-btn sm" aria-label="Editar jogo" onClick={() => setEditing(JSON.parse(JSON.stringify(g)) as Game)}>
+                        <IconPencil size={17} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="scoreline">
-                  <span className="team-label">
-                    <Swatch color={g.a.color} />
-                    {g.a.name}
-                  </span>
-                  <strong className="score">
-                    {a} <small>x</small> {b}
-                  </strong>
-                  <span className="team-label right">
-                    {g.b.name}
-                    <Swatch color={g.b.color} />
-                  </span>
-                </div>
-                {scorers.length > 0 && (
-                  <p className="scorers">
-                    {scorers.map((p) => `⚽ ${p.name}${p.goals > 1 ? ` ×${p.goals}` : ""}`).join("  ")}
-                  </p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                  <div className="scoreline">
+                    <span className="team-label">
+                      <Swatch color={g.a.color} />
+                      {g.a.name}
+                    </span>
+                    <strong className="score">
+                      {a}
+                      <small>×</small>
+                      {b}
+                    </strong>
+                    <span className="team-label right">
+                      {g.b.name}
+                      <Swatch color={g.b.color} />
+                    </span>
+                  </div>
+                  {scorers.length > 0 && (
+                    <p className="scorers">
+                      {scorers
+                        .map((p) => {
+                          const parts = [];
+                          if (p.goals) parts.push(`${p.goals} ${p.goals > 1 ? "gols" : "gol"}`);
+                          if (p.assists) parts.push(`${p.assists} assist.`);
+                          return `${p.name} (${parts.join(", ")})`;
+                        })
+                        .join(" · ")}
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       {match.games.length > 0 && (
-        <button type="button" className="btn ghost block" onClick={() => go("/ranking")}>
-          Ver ranking geral →
-        </button>
+        <a className="btn ghost block" href="#/ranking">
+          Ver ranking geral <IconChevronRight size={18} />
+        </a>
       )}
 
-      <Sheet open={!!editing} onClose={() => setEditing(null)} title={isNew ? "Novo jogo" : "Editar jogo"}>
+      <Sheet open={!!editing} onClose={() => setEditing(null)} title={isNew ? "Lançar placar" : "Editar jogo"}>
         {editing && (
           <>
             <div className="big-score" aria-live="polite">
               <span>{sideScore(editing.a)}</span>
-              <small>x</small>
+              <small>×</small>
               <span>{sideScore(editing.b)}</span>
             </div>
             <div className="sides">

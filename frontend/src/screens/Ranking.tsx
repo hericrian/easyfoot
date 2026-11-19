@@ -3,9 +3,10 @@ import { useStore } from "../app/store";
 import { computeRanking } from "../lib/ranking";
 import { validateDB } from "../lib/store";
 import { Empty } from "../components/ui";
+import { IconDownload, IconTrophy } from "../components/icons";
 import { todayISO } from "../lib/util";
 
-type Sort = "pct" | "wins" | "goals" | "games";
+type Sort = "pct" | "wins" | "goals" | "assists" | "games";
 
 export function Ranking() {
   const { db, setDb, toast } = useStore();
@@ -56,14 +57,17 @@ export function Ranking() {
   return (
     <section className="panel">
       <div className="section-head">
-        <h1>Ranking</h1>
+        <div>
+          <p className="eyebrow">Todas as partidas</p>
+          <h1>Ranking</h1>
+        </div>
         <span className="muted">
           {totalGames} {totalGames === 1 ? "jogo" : "jogos"}
         </span>
       </div>
 
       {rows.length === 0 ? (
-        <Empty icon="🏆" title="Ranking vazio">
+        <Empty icon={<IconTrophy size={40} />} title="Ranking vazio">
           <p className="muted">Registre o resultado de um jogo e o ranking aparece aqui.</p>
           <a className="btn primary" href="#/nova">
             Criar partida
@@ -74,9 +78,10 @@ export function Ranking() {
           <div className="segmented" role="tablist" aria-label="Ordenar por">
             {(
               [
-                ["pct", "Aproveitamento"],
+                ["pct", "Aprov."],
                 ["wins", "Vitórias"],
                 ["goals", "Gols"],
+                ["assists", "Assist."],
                 ["games", "Jogos"],
               ] as [Sort, string][]
             ).map(([k, label]) => (
@@ -108,6 +113,9 @@ export function Ranking() {
                   <th scope="col" title="Gols">
                     G
                   </th>
+                  <th scope="col" title="Assistências">
+                    A
+                  </th>
                   <th scope="col" title="Aproveitamento">
                     %
                   </th>
@@ -116,13 +124,16 @@ export function Ranking() {
               <tbody>
                 {rows.map((r, i) => (
                   <tr key={r.key}>
-                    <td className="pos">{i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}</td>
+                    <td className="pos">
+                      <span className={`pos-badge p${i + 1}`}>{i + 1}</span>
+                    </td>
                     <td className="left name">{r.name}</td>
                     <td>{r.games}</td>
                     <td>{r.wins}</td>
                     <td>{r.draws}</td>
                     <td>{r.losses}</td>
                     <td>{r.goals}</td>
+                    <td>{r.assists}</td>
                     <td className="strong">{Math.round(r.pct * 100)}%</td>
                   </tr>
                 ))}
@@ -133,12 +144,12 @@ export function Ranking() {
         </>
       )}
 
-      <div className="backup">
-        <h2>Backup</h2>
+      <div className="backup group">
+        <h2 className="group-title">Backup</h2>
         <p className="muted">Os dados ficam salvos neste aparelho. Exporte para guardar ou passar para outro celular.</p>
         <div className="row">
           <button type="button" className="btn" onClick={exportBackup} disabled={!db.matches.length}>
-            Exportar backup
+            <IconDownload size={18} /> Exportar backup
           </button>
           <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
             Importar backup

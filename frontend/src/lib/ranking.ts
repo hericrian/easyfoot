@@ -9,6 +9,7 @@ export type RankRow = {
   draws: number;
   losses: number;
   goals: number;
+  assists: number;
   /** Aproveitamento: pontos (V=3, E=1) / pontos possíveis. 0..1 */
   pct: number;
 };
@@ -27,7 +28,7 @@ export function computeRanking(matches: Match[]): RankRow[] {
     const key = nameKey(name);
     let r = rows.get(key);
     if (!r) {
-      r = { key, name, games: 0, wins: 0, draws: 0, losses: 0, goals: 0, pct: 0 };
+      r = { key, name, games: 0, wins: 0, draws: 0, losses: 0, goals: 0, assists: 0, pct: 0 };
       rows.set(key, r);
     }
     return r;
@@ -42,6 +43,7 @@ export function computeRanking(matches: Match[]): RankRow[] {
           const r = row(p.name);
           r.games++;
           r.goals += p.goals || 0;
+          r.assists += p.assists || 0;
           if (mine > other) r.wins++;
           else if (mine === other) r.draws++;
           else r.losses++;
