@@ -86,10 +86,14 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
   const [bId, setB] = useState(pb.id);
   const prefs = loadPrefs();
   const [dur, setDur] = useState(DEFAULT_DURATION);
+  const [custom, setCustom] = useState(false);
+  const [customMin, setCustomMin] = useState("25");
   const [limit, setLimit] = useState(prefs.limit);
   const a = match.teams.find((t) => t.id === aId) ?? pa;
   const b = match.teams.find((t) => t.id === bId) ?? pb;
   const same = a.id === b.id;
+  const minutes = custom ? Number(customMin) : dur;
+  const invalid = custom && (!Number.isInteger(minutes) || minutes < 1 || minutes > 180);
 
   const begin = () => {
     try {
@@ -102,7 +106,7 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
       createdAt: Date.now(),
       a: sideFrom(a, match),
       b: sideFrom(b, match),
-      durationSec: dur * 60,
+      durationSec: minutes * 60,
       goalLimit: limit,
       elapsedMs: 0,
       runningSince: Date.now(),
@@ -126,11 +130,39 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
         <h2 className="group-title">Tempo de jogo</h2>
         <div className="chips" role="radiogroup" aria-label="Tempo de jogo">
           {DURATIONS.map((d) => (
-            <button key={d} type="button" role="radio" aria-checked={dur === d} className="chip-btn" onClick={() => setDur(d)}>
+            <button
+              key={d}
+              type="button"
+              role="radio"
+              aria-checked={!custom && dur === d}
+              className="chip-btn"
+              onClick={() => {
+                setCustom(false);
+                setDur(d);
+              }}
+            >
               {d === 60 ? "1 hora" : `${d} min`}
             </button>
           ))}
+          <button type="button" role="radio" aria-checked={custom} className="chip-btn" onClick={() => setCustom(true)}>
+            Personalizar
+          </button>
         </div>
+        {custom && (
+          <label className="custom-duration">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={180}
+              value={customMin}
+              autoFocus
+              onChange={(e) => setCustomMin(e.target.value.replace(/\D/g, "").slice(0, 3))}
+              aria-label="Minutos de jogo"
+            />
+            <span>minutos</span>
+          </label>
+        )}
         <h2 className="group-title">Acaba antes com</h2>
         <div className="chips" role="radiogroup" aria-label="Limite de gols">
           {LIMITS.map((l) => (
@@ -141,8 +173,8 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
         </div>
       </section>
 
-      <button type="button" className="btn primary lg block" disabled={same} onClick={begin}>
-        <IconWhistle /> {same ? "Escolha times diferentes" : "Começar jogo"}
+      <button type="button" className="btn primary lg block" disabled={same || invalid} onClick={begin}>
+        <IconWhistle /> {same ? "Escolha times diferentes" : invalid ? "Tempo entre 1 e 180 minutos" : "Começar jogo"}
       </button>
       <p className="footnote center">O cronômetro usa o relógio do aparelho: não atrasa com a tela bloqueada.</p>
     </div>

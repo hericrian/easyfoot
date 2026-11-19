@@ -2312,3 +2312,22 @@ dialog.viewer::backdrop {
   opacity: 0.7;
   margin-left: 4px;
 }
+
+/* Duração personalizada do jogo ao vivo */
+.custom-duration {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  animation: slide-down 220ms var(--spring);
+}
+.custom-duration input {
+  width: 96px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.custom-duration span {
+  color: var(--label-2);
+  font-weight: 600;
+}
