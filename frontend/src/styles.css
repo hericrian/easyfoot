@@ -2370,3 +2370,148 @@ dialog.viewer::backdrop {
   background: #000;
   color: #fff;
 }
+
+/* ---------- Conta (login com Google) ---------- */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero {
+  position: relative;
+}
+.hero-account {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 16px;
+}
+.account-btn {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  transition: transform 140ms var(--ease-out);
+}
+.account-btn:active {
+  transform: scale(0.92);
+}
+.account-btn.placeholder {
+  width: 30px;
+  height: 30px;
+}
+.avatar-img {
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.5);
+}
+.avatar-img.initials {
+  display: grid;
+  place-items: center;
+  background: #3a3a3c;
+  color: #fff;
+  font-weight: 700;
+}
+.signin-btn.on-dark {
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+}
+.account-sheet {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.account-sheet > strong {
+  font-size: 1.25rem;
+}
+.account-rows {
+  width: 100%;
+  text-align: left;
+  margin-top: 8px;
+}
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: var(--r-md);
+  border: 1px solid #dadce0;
+  background: #fff;
+  color: #1f1f1f;
+  font: 600 1rem/1 Roboto, -apple-system, system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  transition:
+    transform 140ms var(--ease-out),
+    background-color 160ms ease;
+}
+.google-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.google-btn:disabled {
+  opacity: 0.6;
+}
+@media (hover: hover) and (pointer: fine) {
+  .google-btn:hover:not(:disabled) {
+    background: #f8f9fa;
+  }
+}
+.notify-ask {
+  display: grid;
+  gap: 12px;
+}
+.notify-ask ul {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 4px;
+  color: var(--label-2);
+}
+.notify-icon {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--green);
+}
+.avatar.photo {
+  object-fit: cover;
+  background: var(--fill);
+}
+.review-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.posting-as {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--fill);
+}
+.posting-as .avatar-img {
+  box-shadow: none;
+}
+.signin-to-review {
+  display: grid;
+  gap: 10px;
+}

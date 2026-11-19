@@ -4,6 +4,7 @@ import { Empty, Sheet } from "../components/ui";
 import { IconList, IconPencil, IconShirt, IconTrophy, IconWhistle } from "../components/icons";
 import { formatDate } from "../lib/util";
 import { hourLabel } from "../lib/slots";
+import { scheduleMatchReminders } from "../lib/push";
 import { MatchInfoFields } from "./NewMatch";
 import { ListTab } from "./match/ListTab";
 import { TeamsTab } from "./match/TeamsTab";
@@ -88,6 +89,7 @@ export function MatchScreen({ id, tab }: { id: string; tab?: string }) {
           onSubmit={(e) => {
             e.preventDefault();
             updateMatch(id, (m) => ({ ...m, ...draft, title: draft.title.trim() || "Pelada", location: draft.location.trim() }));
+            scheduleMatchReminders({ ...match, ...draft, title: draft.title.trim() || "Pelada", location: draft.location.trim() });
             setEditing(false);
             toast("Partida atualizada.");
           }}

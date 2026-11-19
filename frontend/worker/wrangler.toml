@@ -1,0 +1,15 @@
+# Worker agendado que envia as notificações push do EasyFoot (a cada minuto).
+name = "easyfoot-push"
+main = "push-cron.ts"
+compatibility_date = "2026-11-01"
+workers_dev = false
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "easyfoot-reviews"
+database_id = "4751d482-1fd1-42da-b5d0-1852c4bd588f"
+
+# Segredo: VAPID_PRIVATE_JWK (wrangler secret put VAPID_PRIVATE_JWK --config worker/wrangler.toml)

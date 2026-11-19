@@ -175,3 +175,8 @@ export const IconExpand = (p: P) => (
     <path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5" />
   </Icon>
 );
+export const IconBell = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" />
+  </Icon>
+);

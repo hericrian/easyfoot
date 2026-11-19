@@ -1,7 +1,7 @@
 // Service worker do EasyFoot: app shell offline.
 // Navegação: rede primeiro (sempre pega a versão nova), cache como fallback.
 // Assets do mesmo domínio: cache primeiro (arquivos do build têm hash no nome).
-const CACHE = "easyfoot-v3";
+const CACHE = "easyfoot-v4";
 // Saída do Vite: /assets/nome-HASH.js|css — conteúdo imutável, pode vir do cache.
 const HASHED = /^\/assets\/.+-[A-Za-z0-9_-]{8}\.(?:js|css)$/;
 const SHELL = ["/", "/manifest.webmanifest", "/assets/easyfoot-logo.svg", "/assets/easyfoot-logo-inline.svg", "/icons/icon-192.png"];
@@ -25,6 +25,8 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // API e login (proxy do Firebase) sempre direto na rede, nunca em cache
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/__/")) return;
 
   if (req.mode === "navigate") {
     event.respondWith(
@@ -68,5 +70,45 @@ self.addEventListener("fetch", (event) => {
           return res;
         }),
     ),
+  );
+});
+
+// ---------- Notificações push (funcionam com o app fechado) ----------
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "EasyFoot", body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "EasyFoot";
+  const options = {
+    body: data.body || "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/favicon-64.png",
+    tag: data.tag || undefined,
+    renotify: Boolean(data.tag),
+    vibrate: [250, 120, 250, 120, 250],
+    data: { url: data.url || "/" },
+  };
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      // App aberto e visível já tocou o som: mostra em silêncio. (Sempre mostrar é exigido
+      // pelo Safari/iOS — push sem notificação visível faz o sistema cancelar a inscrição.)
+      const visible = wins.some((w) => w.visibilityState === "visible");
+      return self.registration.showNotification(title, visible ? { ...options, silent: true, vibrate: undefined } : options);
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      const win = wins.find((w) => new URL(w.url).origin === self.location.origin);
+      if (win) return win.focus().then((w) => w && w.navigate(target));
+      return self.clients.openWindow(target);
+    }),
   );
 });

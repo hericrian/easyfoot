@@ -3,6 +3,7 @@ import { go, useStore } from "../app/store";
 import type { Match } from "../types";
 import { todayISO, uid } from "../lib/util";
 import { addMinutes, slotOf } from "../lib/slots";
+import { scheduleMatchReminders } from "../lib/push";
 
 function minutesBetween(a: string, b: string): number {
   const [ah, am] = a.split(":").map(Number);
@@ -81,6 +82,7 @@ export function NewMatch() {
       games: [],
     };
     setDb((d) => ({ ...d, matches: [m, ...d.matches] }));
+    scheduleMatchReminders(m);
     go(`/partida/${m.id}`);
   };
 

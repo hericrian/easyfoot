@@ -4,6 +4,7 @@ import type { GoalEvent, LiveGame, Match } from "../../types";
 import { clock, elapsedMs, goalLimitReached, isRunning, liveScore, minuteOf, pause, remainingMs, start, toGame } from "../../lib/live";
 import { inkOn, nextPairing, sideFrom, teamSurface } from "../../lib/games";
 import { keepAwake, primeAudio, subChime, vibrate, whistle } from "../../lib/feedback";
+import { schedulePush, type ScheduledPush } from "../../lib/push";
 import { uid } from "../../lib/util";
 import { Empty, Sheet } from "../../components/ui";
 import { IconFlag, IconPause, IconPlay, IconPlus, IconUndo, IconWhistle } from "../../components/icons";
@@ -265,6 +266,33 @@ function Scoreboard({
   }, [subDue, subMs, timeUp, limitHit, live.subAlerts, setLive]);
   const nextSubIn = subMs ? subMs - (elapsed % subMs) : null;
 
+  // Avisos com o app fechado: agenda no servidor sempre que a bola volta a rolar e cancela ao pausar.
+  useEffect(() => {
+    const group = `live:${live.id}`;
+    if (live.runningSince === null) {
+      void schedulePush(group, []);
+      return;
+    }
+    const t0 = Date.now();
+    const el = elapsedMs(live, t0);
+    const url = `/#/partida/${match.id}/ao-vivo`;
+    const items: ScheduledPush[] = [];
+    const total = live.durationSec * 1000;
+    if (total && el < total) {
+      items.push({ at: t0 + (total - el), title: "Fim do tempo!", body: `${live.a.name} x ${live.b.name}: encerre o jogo para salvar o resultado.`, url, tag: `end-${live.id}` });
+    }
+    if (subMs) {
+      for (let k = Math.floor(el / subMs) + 1; items.length < 25; k++) {
+        const at = k * subMs;
+        if (total && at >= total) break;
+        if (!total && k > 12) break;
+        items.push({ at: t0 + (at - el), title: "Hora de substituir!", body: "Troque quem está de fora para todo mundo jogar.", url, tag: `sub-${live.id}` });
+      }
+    }
+    void schedulePush(group, items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live.id, live.runningSince, live.elapsedMs, live.subEveryMin, live.durationSec]);
+
   const toggle = () => {
     primeAudio();
     vibrate(15);
@@ -307,6 +335,7 @@ function Scoreboard({
   const finish = () => {
     const game = toGame(live);
     updateMatch(match.id, (m) => ({ ...m, games: [...m.games, game], live: null }));
+    void schedulePush(`live:${live.id}`, []);
     void keepAwake(false);
     whistle("end");
     toast(`${game.a.name} ${sa} x ${sb} ${game.b.name} — salvo.`);
@@ -316,6 +345,7 @@ function Scoreboard({
   const discard = () => {
     if (!window.confirm("Descartar este jogo? O placar não será salvo.")) return;
     updateMatch(match.id, (m) => ({ ...m, live: null }));
+    void schedulePush(`live:${live.id}`, []);
     void keepAwake(false);
   };
 
