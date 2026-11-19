@@ -3,6 +3,7 @@ import { go, useStore } from "../app/store";
 import { Empty, Sheet } from "../components/ui";
 import { IconList, IconPencil, IconShirt, IconTrophy, IconWhistle } from "../components/icons";
 import { formatDate } from "../lib/util";
+import { hourLabel } from "../lib/slots";
 import { MatchInfoFields } from "./NewMatch";
 import { ListTab } from "./match/ListTab";
 import { TeamsTab } from "./match/TeamsTab";
@@ -20,7 +21,7 @@ export function MatchScreen({ id, tab }: { id: string; tab?: string }) {
   const { db, updateMatch, setDb, toast } = useStore();
   const match = db.matches.find((m) => m.id === id);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({ title: "", location: "", date: "", time: "" });
+  const [draft, setDraft] = useState<{ title: string; location: string; date: string; time: string; endTime?: string }>({ title: "", location: "", date: "", time: "" });
 
   if (!match) {
     return (
@@ -44,7 +45,7 @@ export function MatchScreen({ id, tab }: { id: string; tab?: string }) {
   };
 
   const openEdit = () => {
-    setDraft({ title: match.title, location: match.location, date: match.date, time: match.time });
+    setDraft({ title: match.title, location: match.location, date: match.date, time: match.time, endTime: match.endTime ?? "" });
     setEditing(true);
   };
 
@@ -59,7 +60,7 @@ export function MatchScreen({ id, tab }: { id: string; tab?: string }) {
     <section className="panel">
       <header className="page-head">
         <div>
-          <p className="eyebrow">{[formatDate(match.date, match.time), match.location].filter(Boolean).join(" · ") || "Sem data definida"}</p>
+          <p className="eyebrow">{[formatDate(match.date) + (match.time ? ` · ${hourLabel(match.time)}${match.endTime ? ` às ${hourLabel(match.endTime)}` : ""}` : ""), match.location].filter(Boolean).join(" · ") || "Sem data definida"}</p>
           <h1>{match.title || "Pelada"}</h1>
         </div>
         <button type="button" className="icon-btn" aria-label="Editar partida" onClick={openEdit}>

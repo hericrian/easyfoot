@@ -68,6 +68,8 @@ export type Match = {
   location: string;
   date: string; // yyyy-mm-dd
   time: string; // HH:mm
+  /** Fim do horário (HH:mm). Dia da semana + início + fim definem o ranking do horário. */
+  endTime?: string;
   createdAt: number;
   entries: Entry[];
   teams: Team[];

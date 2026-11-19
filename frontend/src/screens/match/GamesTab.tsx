@@ -6,6 +6,7 @@ import { nextPairing, sideFrom, standings } from "../../lib/games";
 import { clock, liveScore } from "../../lib/live";
 import { gameText, shareText, whatsappUrl } from "../../lib/share";
 import { uid } from "../../lib/util";
+import { slotOf } from "../../lib/slots";
 import { Empty, Sheet, Stepper, Swatch } from "../../components/ui";
 import { IconChevronRight, IconPencil, IconShare, IconShirt, IconTimer, IconWhistle } from "../../components/icons";
 
@@ -227,8 +228,8 @@ export function GamesTab({ match }: { match: Match }) {
       )}
 
       {match.games.length > 0 && (
-        <a className="btn ghost block" href="#/ranking">
-          Ver ranking geral <IconChevronRight size={18} />
+        <a className="btn ghost block" href={slotOf(match) ? `#/ranking/${slotOf(match)!.key}` : "#/ranking"}>
+          {slotOf(match) ? `Ranking de ${slotOf(match)!.short}` : "Ver ranking geral"} <IconChevronRight size={18} />
         </a>
       )}
 

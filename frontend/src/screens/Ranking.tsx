@@ -5,21 +5,27 @@ import { validateDB } from "../lib/store";
 import { Empty } from "../components/ui";
 import { IconDownload, IconTrophy } from "../components/icons";
 import { todayISO } from "../lib/util";
+import { groupBySlot } from "../lib/slots";
 
 type Sort = "pct" | "wins" | "goals" | "assists" | "games";
 
-export function Ranking() {
+export function Ranking({ slot }: { slot?: string }) {
   const { db, setDb, toast } = useStore();
   const [sort, setSort] = useState<Sort>("pct");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Rankings por horário fixo (dia da semana + início + fim). "Geral" soma tudo.
+  const slots = useMemo(() => groupBySlot(db.matches.filter((m) => m.games.length > 0)), [db.matches]);
+  const current = slots.find((s) => s.key === slot) ?? null;
+  const scope = current ? current.matches : db.matches;
+
   const rows = useMemo(() => {
-    const r = computeRanking(db.matches);
+    const r = computeRanking(scope);
     if (sort === "pct") return r;
     return [...r].sort((a, b) => b[sort] - a[sort] || b.pct - a.pct || a.name.localeCompare(b.name));
-  }, [db.matches, sort]);
+  }, [scope, sort]);
 
-  const totalGames = db.matches.reduce((n, m) => n + m.games.length, 0);
+  const totalGames = scope.reduce((n, m) => n + m.games.length, 0);
 
   const exportBackup = () => {
     try {
@@ -58,13 +64,34 @@ export function Ranking() {
     <section className="panel">
       <div className="section-head">
         <div>
-          <p className="eyebrow">Todas as partidas</p>
+          <p className="eyebrow">{current ? current.label : "Todas as partidas"}</p>
           <h1>Ranking</h1>
         </div>
         <span className="muted">
           {totalGames} {totalGames === 1 ? "jogo" : "jogos"}
         </span>
       </div>
+
+      {slots.length > 0 && (
+        <nav className="slot-chips" aria-label="Ranking por horário">
+          <a className="chip-btn" role="radio" aria-checked={!current} href="#/ranking" style={{ display: "inline-flex", alignItems: "center", textDecoration: "none" }}>
+            Geral
+          </a>
+          {slots.map((s) => (
+            <a
+              key={s.key}
+              className="chip-btn"
+              role="radio"
+              aria-checked={current?.key === s.key}
+              href={`#/ranking/${s.key}`}
+              style={{ display: "inline-flex", alignItems: "center", textDecoration: "none" }}
+            >
+              {s.short}
+              <small>{s.matches.length}</small>
+            </a>
+          ))}
+        </nav>
+      )}
 
       {rows.length === 0 ? (
         <Empty icon={<IconTrophy size={40} />} title="Ranking vazio">
