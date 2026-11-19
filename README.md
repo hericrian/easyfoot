@@ -80,16 +80,11 @@ npx wrangler login   # uma vez
 npm run deploy       # build + wrangler pages deploy dist --project-name easyfoot --branch main
 ```
 
-Para deploy automático a cada push, conecte este repositório ao projeto no painel do Cloudflare (Workers & Pages → easyfoot → Settings → Builds) com:
+O projeto foi criado como **Pages clássico por upload direto** (`wrangler pages project create easyfoot --force`, necessário uma única vez porque o Wrangler 4 delega Pages para Workers por padrão). Deploys seguintes usam só `npm run deploy`, sem `--force`.
 
-| Campo | Valor |
-| --- | --- |
-| Diretório raiz | `frontend` |
-| Comando de build | `npm run build` |
-| Diretório de saída | `dist` |
-| Branch de produção | `main` |
+Projetos de upload direto não podem ser ligados ao Git pelo painel. Para deploy automático a cada push, use uma GitHub Action com `cloudflare/wrangler-action` e um segredo `CLOUDFLARE_API_TOKEN` no repositório.
 
-Não há variáveis de ambiente nem segredos em produção.
+Não há variáveis de ambiente nem segredos no app em produção.
 
 ## Segurança
 
