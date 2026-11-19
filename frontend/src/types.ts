@@ -57,6 +57,10 @@ export type LiveGame = {
   durationSec: number;
   /** Encerra ao atingir esse número de gols de um time (0 = sem limite). */
   goalLimit: number;
+  /** Lembrete de substituição a cada N minutos de bola rolando (0/ausente = desligado). */
+  subEveryMin?: number;
+  /** Quantos lembretes de substituição já foram dados (evita repetir ao reabrir). */
+  subAlerts?: number;
   elapsedMs: number;
   runningSince: number | null;
   events: GoalEvent[];

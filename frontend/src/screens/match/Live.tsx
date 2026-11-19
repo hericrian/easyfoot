@@ -3,7 +3,7 @@ import { go, useStore } from "../../app/store";
 import type { GoalEvent, LiveGame, Match } from "../../types";
 import { clock, elapsedMs, goalLimitReached, isRunning, liveScore, minuteOf, pause, remainingMs, start, toGame } from "../../lib/live";
 import { inkOn, nextPairing, sideFrom, teamSurface } from "../../lib/games";
-import { keepAwake, primeAudio, vibrate, whistle } from "../../lib/feedback";
+import { keepAwake, primeAudio, subChime, vibrate, whistle } from "../../lib/feedback";
 import { uid } from "../../lib/util";
 import { Empty, Sheet } from "../../components/ui";
 import { IconFlag, IconPause, IconPlay, IconPlus, IconUndo, IconWhistle } from "../../components/icons";
@@ -12,14 +12,16 @@ import { IconFlag, IconPause, IconPlay, IconPlus, IconUndo, IconWhistle } from "
 const DURATIONS = [10, 15, 20, 30, 60];
 const DEFAULT_DURATION = 60;
 const LIMITS = [0, 1, 2, 3];
+/** Lembrete de substituição (minutos). 0 = não lembrar. */
+const SUB_OPTIONS = [0, 5, 10, 15, 20];
 const PREF = "easyfoot:live-prefs";
 
-function loadPrefs(): { limit: number } {
+function loadPrefs(): { limit: number; sub: number } {
   try {
     const p = JSON.parse(localStorage.getItem(PREF) || "{}");
-    return { limit: Number.isFinite(p.limit) ? p.limit : 0 };
+    return { limit: Number.isFinite(p.limit) ? p.limit : 0, sub: SUB_OPTIONS.includes(p.sub) ? p.sub : 0 };
   } catch {
-    return { limit: 0 };
+    return { limit: 0, sub: 0 };
   }
 }
 
@@ -27,21 +29,14 @@ function useNow(active: boolean): number {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     if (!active) return;
-    let raf = 0;
-    let last = 0;
-    const loop = (t: number) => {
-      // ~4 atualizações/s bastam para mm:ss e economizam bateria
-      if (t - last > 240) {
-        last = t;
-        setNow(Date.now());
-      }
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
+    // setInterval (e não requestAnimationFrame): continua disparando com a aba em
+    // segundo plano, então apito e lembrete de troca tocam mesmo fora da tela.
+    // ~4 atualizações/s bastam para mm:ss e economizam bateria.
+    const id = window.setInterval(() => setNow(Date.now()), 250);
     const onVis = () => setNow(Date.now());
     document.addEventListener("visibilitychange", onVis);
     return () => {
-      cancelAnimationFrame(raf);
+      window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [active]);
@@ -89,6 +84,7 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
   const [custom, setCustom] = useState(false);
   const [customMin, setCustomMin] = useState("25");
   const [limit, setLimit] = useState(prefs.limit);
+  const [sub, setSub] = useState(prefs.sub);
   const a = match.teams.find((t) => t.id === aId) ?? pa;
   const b = match.teams.find((t) => t.id === bId) ?? pb;
   const same = a.id === b.id;
@@ -97,7 +93,7 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
 
   const begin = () => {
     try {
-      localStorage.setItem(PREF, JSON.stringify({ limit }));
+      localStorage.setItem(PREF, JSON.stringify({ limit, sub }));
     } catch {
       /* ignore */
     }
@@ -108,6 +104,8 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
       b: sideFrom(b, match),
       durationSec: minutes * 60,
       goalLimit: limit,
+      subEveryMin: sub,
+      subAlerts: 0,
       elapsedMs: 0,
       runningSince: Date.now(),
       events: [],
@@ -171,6 +169,15 @@ function Setup({ match, onStart }: { match: Match; onStart: (l: LiveGame) => voi
             </button>
           ))}
         </div>
+        <h2 className="group-title">Lembrete de substituição</h2>
+        <div className="chips" role="radiogroup" aria-label="Lembrete de substituição">
+          {SUB_OPTIONS.map((s) => (
+            <button key={s} type="button" role="radio" aria-checked={sub === s} className="chip-btn" onClick={() => setSub(s)}>
+              {s ? `A cada ${s} min` : "Não lembrar"}
+            </button>
+          ))}
+        </div>
+        {sub > 0 && <p className="footnote">Toca um sinal diferente do apito e vibra para lembrar de trocar, assim todo mundo joga.</p>}
       </section>
 
       <button type="button" className="btn primary lg block" disabled={same || invalid} onClick={begin}>
@@ -243,6 +250,21 @@ function Scoreboard({
     prevRemaining.current = remaining;
   }, [remaining, toast]);
 
+  // Lembrete de substituição a cada N minutos de bola rolando (não toca depois do fim do tempo)
+  const subMs = (live.subEveryMin ?? 0) * 60_000;
+  const subDue = subMs ? Math.floor(elapsed / subMs) : 0;
+  const [subBanner, setSubBanner] = useState(false);
+  useEffect(() => {
+    if (!subMs || timeUp || limitHit) return;
+    if (subDue > (live.subAlerts ?? 0)) {
+      setLive((l) => (l ? { ...l, subAlerts: subDue } : l));
+      subChime();
+      vibrate([250, 120, 250, 120, 250]);
+      setSubBanner(true);
+    }
+  }, [subDue, subMs, timeUp, limitHit, live.subAlerts, setLive]);
+  const nextSubIn = subMs ? subMs - (elapsed % subMs) : null;
+
   const toggle = () => {
     primeAudio();
     vibrate(15);
@@ -303,13 +325,31 @@ function Scoreboard({
 
   return (
     <div className="stack">
+      {subBanner && (
+        <div className="sub-banner" role="alert">
+          <span className="sub-arrows" aria-hidden>
+            ⇅
+          </span>
+          <div>
+            <strong>Hora de substituir!</strong>
+            <span>Troque quem está de fora para todo mundo jogar.</span>
+          </div>
+          <button type="button" className="btn sm" onClick={() => setSubBanner(false)}>
+            Feito
+          </button>
+        </div>
+      )}
       <section className={`scoreboard${running ? " is-running" : ""}${timeUp || limitHit ? " is-over" : ""}`} aria-label="Placar ao vivo">
         <div className="sb-status">
           <span className="live-pill">
             <span className="dot" aria-hidden />
             {timeUp || limitHit ? "Fim de jogo" : running ? "Ao vivo" : "Pausado"}
           </span>
-          {live.goalLimit > 0 && <span className="sb-rule">até {live.goalLimit} {live.goalLimit === 1 ? "gol" : "gols"}</span>}
+          <span className="sb-rule">
+            {[live.goalLimit > 0 ? `até ${live.goalLimit} ${live.goalLimit === 1 ? "gol" : "gols"}` : "", nextSubIn !== null && !timeUp ? `troca em ${clock(nextSubIn)}` : ""]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
         </div>
 
         <div className="sb-main">

@@ -2331,3 +2331,42 @@ dialog.viewer::backdrop {
   color: var(--label-2);
   font-weight: 600;
 }
+
+/* Aviso de substituição */
+.sub-banner {
+  position: sticky;
+  top: calc(100px + env(safe-area-inset-top));
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: #ffd60a;
+  color: #000;
+  box-shadow: var(--shadow-float);
+  animation: slide-down 280ms var(--spring);
+}
+.sub-banner > div {
+  flex: 1;
+  display: grid;
+  gap: 1px;
+}
+.sub-banner span:not(.sub-arrows) {
+  font-size: 0.875rem;
+}
+.sub-arrows {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #000;
+  color: #ffd60a;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+.sub-banner .btn {
+  background: #000;
+  color: #fff;
+}

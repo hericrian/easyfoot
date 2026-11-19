@@ -59,6 +59,31 @@ export function whistle(kind: "short" | "end" = "short"): void {
   }
 }
 
+/**
+ * Sinal de substituição: três notas subindo, como a placa de troca do estádio —
+ * propositalmente diferente do apito, para ninguém confundir com fim de jogo.
+ */
+export function subChime(): void {
+  const a = audio();
+  if (!a) return;
+  const notes = [784, 988, 1319]; // Sol, Si, Mi
+  notes.forEach((freq, i) => {
+    for (const rep of [0, 0.9]) {
+      const start = a.currentTime + rep + i * 0.16;
+      const osc = a.createOscillator();
+      const gain = a.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
+      osc.connect(gain).connect(a.destination);
+      osc.start(start);
+      osc.stop(start + 0.52);
+    }
+  });
+}
+
 export function vibrate(pattern: number | number[]): void {
   try {
     // O Chrome só permite vibrar depois de um toque real na página.
