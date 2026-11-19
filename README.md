@@ -21,7 +21,9 @@ O EasyFoot transforma a lista da pelada que fica perdida no WhatsApp em uma part
 | **Ajustes** | Trocar jogador de time, renomear times e escolher cor do colete. |
 | **Ao vivo** | Cronômetro com duração configurável (ou livre) e limite de gols opcional, placar grande, gol com autor e assistência, desfazer, apito e vibração no fim do tempo, tela sempre acesa. O tempo vem do relógio do aparelho e não atrasa com a tela bloqueada. |
 | **Jogos** | Placar ao vivo ou lançado depois. Sugere o próximo confronto no esquema "ganhou fica". Classificação da noite por time. |
-| **Ranking** | Jogos, vitórias, empates, derrotas, gols, assistências e aproveitamento (V=3, E=1). |
+| **Ranking** | Jogos, vitórias, empates, derrotas, gols, assistências e aproveitamento (V=3, E=1). Ranking geral e um ranking para cada horário fixo (dia da semana + início + fim, ex.: "Terça · 20h às 21h"). |
+| **Avaliações** | Notas de 1 a 5 estrelas com comentário, públicas para todos (estilo Google Maps): média, distribuição e lista. Antispam por origem, campo-isca, sem links e limite por IP. |
+| **Pix** | QR code para pagar o horário ou apoiar o desenvolvimento, com tela cheia e zoom, download e Pix copia e cola. |
 | **Compartilhar** | Times e resultados formatados para o WhatsApp (compartilhamento nativo, copiar ou link `wa.me`). |
 | **PWA** | Instalável em **Android** e **Windows/Mac** (botão "Instalar" no Chrome/Edge) e em **iPhone/iPad** (Safari → Compartilhar → Adicionar à Tela de Início, com instruções na tela). Atalhos para Nova partida e Ranking no ícone. Funciona offline depois do primeiro acesso. |
 | **Backup** | Exportar/importar JSON para guardar ou trocar de aparelho. |
@@ -38,7 +40,9 @@ Cloudflare Pages (estático, CDN global)
     └── persistência local     src/lib/store.ts    (localStorage + backup JSON)
 ```
 
-**Por que não há backend em produção:** todo o MVP roda no aparelho do usuário. Isso dá custo zero, funcionamento offline, nenhuma credencial para proteger e nenhum dado pessoal trafegando. Cloudflare Pages não executa FastAPI, e o OCR em Python exigiria um servidor com CPU dedicada. No navegador, ele roda de graça no próprio celular.
+**Dados:** as partidas ficam no aparelho (localStorage). Só as **avaliações** são compartilhadas: ficam no **Cloudflare D1** e são servidas por uma Pages Function (`frontend/functions/api/reviews.ts`).
+
+**Por que as partidas não usam backend:** todo o MVP roda no aparelho do usuário. Isso dá custo zero, funcionamento offline, nenhuma credencial para proteger e nenhum dado pessoal trafegando. Cloudflare Pages não executa FastAPI, e o OCR em Python exigiria um servidor com CPU dedicada. No navegador, ele roda de graça no próprio celular.
 
 A pasta `backend/` (FastAPI) e `database/schema.sql` ficam como base para a V2 (login, grupos e ranking compartilhado). O caminho recomendado está em [docs/arquitetura.md](docs/arquitetura.md).
 
@@ -73,23 +77,42 @@ npm run pages:dev    # simula o Cloudflare Pages localmente (com _headers/CSP)
 
 ## Deploy (Cloudflare Pages)
 
-Projeto Pages: `easyfoot` → domínio `easyfoot.pages.dev`.
+Projeto Pages `easyfoot` → **https://easyfoot.pages.dev**. Configuração em `frontend/wrangler.toml` (inclui o banco D1 `easyfoot-reviews`).
+
+### Automático (GitHub Actions)
+
+`.github/workflows/deploy.yml`: todo push na `main` roda testes, build, migrações do D1 e publica no Pages. Pull requests rodam só testes e build.
+
+Segredos necessários no repositório (Settings → Secrets and variables → Actions):
+
+| Segredo | Valor |
+| --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | ID da conta Cloudflare (`npx wrangler whoami`) |
+| `CLOUDFLARE_API_TOKEN` | Token com permissões **Account → Cloudflare Pages: Edit** e **Account → D1: Edit** |
+
+### Manual
 
 ```bash
 cd frontend
 npx wrangler login   # uma vez
-npm run deploy       # build + wrangler pages deploy dist --project-name easyfoot --branch main
+npm run deploy
 ```
 
-O projeto foi criado como **Pages clássico por upload direto** (`wrangler pages project create easyfoot --force`, necessário uma única vez porque o Wrangler 4 delega Pages para Workers por padrão). Deploys seguintes usam só `npm run deploy`, sem `--force`.
+O projeto foi criado como Pages clássico (`wrangler pages project create easyfoot --force`, uma única vez, porque o Wrangler 4 delega Pages para Workers por padrão).
 
-Projetos de upload direto não podem ser ligados ao Git pelo painel. Para deploy automático a cada push, use uma GitHub Action com `cloudflare/wrangler-action` e um segredo `CLOUDFLARE_API_TOKEN` no repositório.
+### Avaliações: moderação
 
-Não há variáveis de ambiente nem segredos no app em produção.
+No painel do Cloudflare → D1 → `easyfoot-reviews` → Console:
+
+```sql
+SELECT id, name, rating, comment FROM reviews ORDER BY id DESC LIMIT 50;
+UPDATE reviews SET hidden = 1 WHERE id = 123;  -- esconde uma avaliação
+```
 
 ## Segurança
 
-- Sem segredos no código: o app não usa chaves nem tokens.
+- Sem segredos no código: tokens do Cloudflare só existem como segredos do GitHub Actions.
+- Avaliações: IP guardado apenas como hash (SHA-256 com sal), limite de 2 por dia, links bloqueados, campo-isca contra robôs e verificação de origem.
 - `frontend/public/_headers` aplica CSP restritiva, `X-Frame-Options: DENY`, `nosniff` e `Referrer-Policy`.
 - A CSP libera apenas `cdn.jsdelivr.net` e `tessdata.projectnaptha.com`, que servem o motor e o idioma do OCR.
 - Os dados ficam no `localStorage` do aparelho. O backup é um arquivo JSON local.
